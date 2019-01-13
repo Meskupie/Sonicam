@@ -1,0 +1,1 @@
+//View for the background element that shows in Equalizer, adding new faces, ect.
