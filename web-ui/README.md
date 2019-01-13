@@ -6,10 +6,10 @@
 ```
 npm install
 ```
-which will install all the necissary packages according to the package.json file
+which will install all the necissary packages according to the package.json file . 
 4. Run the command:
 ```
 npm start
 ```
-which will start the web server on localhost
+which will start the web server on localhost . 
 5. Navigate to the link if it did not open by itself
