@@ -1,5 +1,5 @@
 # Sonicam User Interface
-##How to run UI using react
+## How to run UI using react
 1. Download and install the most recent (current) [node.js](https://nodejs.org/en/) which will allow you to use npm
 2. Open the project directory web-ui in terminal
 3. Run the command:
