@@ -1,0 +1,15 @@
+.Person {
+    position: absolute;
+}
+
+.Overview {
+
+}
+
+.Untracked {
+    /*Some color overlay*/
+}
+
+.Muted {
+    /*Some overlay to make it obvious that someone is muted*/
+}
