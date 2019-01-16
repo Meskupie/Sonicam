@@ -1,6 +1,19 @@
 @import "../../../../assets/styles/globals";
 
 .Equalizer{
+    position: absolute;
     background-image: $gradient;
     box-shadow: $large-shadow;
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    border-radius: 45px;
+    top: 50px;
+    left: 660px;
+}
+
+.Icon{
+    margin: 0 auto;
+    display: block;
 }
