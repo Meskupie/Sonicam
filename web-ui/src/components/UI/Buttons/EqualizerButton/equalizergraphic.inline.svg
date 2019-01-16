@@ -1,0 +1,82 @@
+<svg width="143px" height="124px" viewBox="0 0 143 124" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient x1="50%" y1="100%" x2="50%" y2="-161.10244%" id="linearGradient-1">
+            <stop stop-color="#4BF48F" offset="0%"></stop>
+            <stop stop-color="#5BCDE9" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="100%" x2="50%" y2="0%" id="linearGradient-2">
+            <stop stop-color="#4BF48F" offset="0%"></stop>
+            <stop stop-color="#92E9FF" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-3" cx="10.8" cy="61.2" r="10.8"></circle>
+        <filter x="-125.0%" y="-125.0%" width="350.0%" height="350.0%" filterUnits="objectBoundingBox" id="filter-4">
+            <feMorphology radius="2" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="7" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.222797781 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="100%" x2="50%" y2="-161.10244%" id="linearGradient-5">
+            <stop stop-color="#FF3E82" offset="0%"></stop>
+            <stop stop-color="#FFC084" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="100%" x2="50%" y2="0%" id="linearGradient-6">
+            <stop stop-color="#FF3E82" offset="0%"></stop>
+            <stop stop-color="#FFC084" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-7" cx="10.8" cy="82.8" r="10.8"></circle>
+        <filter x="-125.0%" y="-125.0%" width="350.0%" height="350.0%" filterUnits="objectBoundingBox" id="filter-8">
+            <feMorphology radius="2" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="7" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.222797781 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-9">
+            <stop stop-color="#FFE570" offset="0%"></stop>
+            <stop stop-color="#F89C34" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-10" cx="10.8" cy="39.6" r="10.8"></circle>
+        <filter x="-125.0%" y="-125.0%" width="350.0%" height="350.0%" filterUnits="objectBoundingBox" id="filter-11">
+            <feMorphology radius="2" operator="dilate" in="SourceAlpha" result="shadowSpreadOuter1"></feMorphology>
+            <feOffset dx="0" dy="0" in="shadowSpreadOuter1" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="7" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.222797781 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Mockup-Without-Video-Unscaled" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Main" transform="translate(-676.000000, -78.000000)">
+            <g id="EQ-Large" transform="translate(658.000000, 50.000000)">
+                <g id="EQ">
+                    <g id="Group" transform="translate(36.000000, 28.800000)">
+                        <g id="Slider-1">
+                            <rect id="Rectangle" fill="#25266C" x="7.2" y="0" width="7.2" height="122.4" rx="3.6"></rect>
+                            <rect id="Rectangle" fill="url(#linearGradient-1)" x="7.2" y="57.6" width="7.2" height="64.8" rx="3.6"></rect>
+                            <g id="Oval">
+                                <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3"></use>
+                                <circle stroke="url(#linearGradient-2)" stroke-width="7.15034483" stroke-linejoin="square" fill="#D5EBFF" fill-rule="evenodd" cx="10.8" cy="61.2" r="7.22482759"></circle>
+                            </g>
+                        </g>
+                        <g id="Slider-2" transform="translate(43.200000, 0.000000)">
+                            <rect id="Rectangle" fill="#25266C" x="7.2" y="0" width="7.2" height="122.4" rx="3.6"></rect>
+                            <rect id="Rectangle" fill="url(#linearGradient-5)" x="7.2" y="86.4" width="7.2" height="36" rx="3.6"></rect>
+                            <g id="Oval">
+                                <use fill="black" fill-opacity="1" filter="url(#filter-8)" xlink:href="#path-7"></use>
+                                <circle stroke="url(#linearGradient-6)" stroke-width="7.15034483" stroke-linejoin="square" fill="#D5EBFF" fill-rule="evenodd" cx="10.8" cy="82.8" r="7.22482759"></circle>
+                            </g>
+                        </g>
+                        <g id="Slider-3" transform="translate(86.400000, 0.000000)">
+                            <rect id="Rectangle" fill="#25266C" x="7.2" y="0" width="7.2" height="122.4" rx="3.6"></rect>
+                            <rect id="Rectangle" fill="url(#linearGradient-9)" x="7.2" y="43.2" width="7.2" height="79.2" rx="3.6"></rect>
+                            <g id="Oval">
+                                <use fill="black" fill-opacity="1" filter="url(#filter-11)" xlink:href="#path-10"></use>
+                                <circle stroke="url(#linearGradient-9)" stroke-width="7.15034483" stroke-linejoin="square" fill="#FFFFFF" fill-rule="evenodd" cx="10.8" cy="39.6" r="7.22482759"></circle>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

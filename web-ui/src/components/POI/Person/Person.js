@@ -1,8 +1,7 @@
 import React from 'react';
 import classes from './Person.module.css'
 import Image from './Image/Image'
-import VolumeMultiplier from './Volume/VolumeMultiplier/VolumeMultiplier'
-import VolumeNormalizer from './Volume/VolumeNormalizer/VolumeNormalizer'
+import Volume from './Volume/Volume'
 
 //Where the face video/images will be displayed
 //either when tracked, when adding new faces or when
@@ -26,17 +25,19 @@ const person = (props) => {
 
     return (
         <div className={personClass.join(' ')} style={posStyle}>
-            <VolumeNormalizer
+            <Volume
                 widthHeight={props.widthHeight}
                 volume={props.normalizerVolume}
                 volumeWidth={props.volumeWidth}
                 voulumeSpacing={props.voulumeSpacing}
+                type={"normalizer"}
             />
-            <VolumeMultiplier
+            <Volume
                 widthHeight={props.widthHeight}
                 volume={props.multiplierVolume}
                 volumeWidth={props.volumeWidth}
                 voulumeSpacing={props.voulumeSpacing}
+                type={"multiplier"}
             />
             <Image
                 posXY={(props.widthHeight - props.imgWidthHeight) / 2}
