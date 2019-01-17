@@ -28,7 +28,20 @@ const volume = (props) => {
         //Throw error
     }
 
-    circleClass.push(classes.Normal);
+    switch(props.state){
+        case "normal":
+            circleClass.push(classes.Normal);
+            break;
+        case "muted":
+            circleClass.push(classes.Muted);
+            break;
+        case "poor":
+            circleClass.push(classes.Poor);
+            break;
+        default:
+            circleClass.push(classes.Lost);
+    }
+
 
 
     //Need if volume 0 then don't return

@@ -451,14 +451,16 @@ module.exports = function (webpackEnv) {
               exclude: /node_modules/,
               use: {
                 loader: 'svg-react-loader',
-                options: {
-                  tag: 'symbol',
-                  attrs: {
-                    title: 'example',
-                  },
-                  name: 'MyIcon',
-                },
               },
+            },
+            {
+              test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+              use: [{
+                loader: 'file-loader',
+                options: {
+                  name: '[name].[ext]',
+                }
+              }]
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.

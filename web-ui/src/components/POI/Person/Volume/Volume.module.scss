@@ -9,8 +9,14 @@
     &.Normal {
         stroke: #21F8B6;
     }
-    &.PoorAudio {
+    &.Poor {
         stroke: #ffa958;
+    }
+    &.Muted {
+        stroke: #FF4E4E;
+    }
+    &.Lost {
+        stroke: #6263DB;
     }
 }
 
@@ -18,8 +24,11 @@
     &.Normal {
         stroke: #00a170;
     }
-    &.PoorAudio {
+    &.Poor {
         stroke: #D97212;
+    }
+    &.Muted {
+        stroke: #C21A1A;
     }
 }
   

@@ -1,15 +1,11 @@
 @import "../../../../assets/styles/globals";
 
-.Equalizer{
+.Settings{
     position: absolute;
     background-image: $gradient;
     box-shadow: $large-shadow;
     display: flex;
     align-items: center;
+    justify-content: center;
     border-radius: 45px;
-}
-
-.Icon{
-    margin: 0 auto;
-    display: block;
 }

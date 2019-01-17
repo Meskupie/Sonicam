@@ -31,6 +31,7 @@ const person = (props) => {
                 volumeWidth={props.volumeWidth}
                 voulumeSpacing={props.voulumeSpacing}
                 type={"normalizer"}
+                state={props.state}
             />
             <Volume
                 widthHeight={props.widthHeight}
@@ -38,6 +39,7 @@ const person = (props) => {
                 volumeWidth={props.volumeWidth}
                 voulumeSpacing={props.voulumeSpacing}
                 type={"multiplier"}
+                state={props.state}
             />
             <Image
                 posXY={(props.widthHeight - props.imgWidthHeight) / 2}
