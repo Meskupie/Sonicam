@@ -3,22 +3,29 @@ import classes from './UserVolumeButton.module.scss';
 
 const userVolumeButton = (props) => {
 
+    var userVolumeButtonStyle = {
+        top: props.params.offsetTop + 'px',
+        left: props.params.offsetSides + 'px',
+        width: props.params.buttonLargeWidth + 'px',
+        height: props.params.buttonHeight + 'px'
+    };
+
     let volumeButtonContainerStyle = {
-        width: 410 * props.width / 560 + 'px',
-        height: 80 * props.width / 560 + 'px'
+        width: 410 * props.params.buttonLargeWidth / 560 + 'px',
+        height: 80 * props.params.buttonHeight / 180 + 'px'
     }
 
     let textStyle = {
-        fontSize: 68 * props.height / 180
+        fontSize: 68 * props.params.buttonHeight / 180
     }
 
     let minusPlusStyle = {
-        height: 80 * props.height / 180 + 'px',
-        width: 80 * props.height / 180 + 'px'
+        height: 80 * props.params.buttonHeight / 180 + 'px',
+        width: 80 * props.params.buttonHeight / 180 + 'px'
     }
 
     return (
-        <div className={classes.VolumeButton} style={props.style}>
+        <div className={classes.VolumeButton} style={userVolumeButtonStyle}>
             <div className={classes.VolumeButtonContainer} style={volumeButtonContainerStyle}>
                 <div className={classes.Minus} style={minusPlusStyle}>
 
@@ -50,7 +57,7 @@ const userVolumeButton = (props) => {
                 </svg>
                     
             </div>
-            <div className={classes.Text}>
+            <div className={classes.Text} style={textStyle}>
                 {props.volume}
             </div>
             <div className={classes.Plus} style={minusPlusStyle}>

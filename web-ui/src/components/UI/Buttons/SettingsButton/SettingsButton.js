@@ -3,22 +3,15 @@ import classes from './SettingsButton.module.scss';
 
 const settingsButton = (props) => {
 
-    let volumeButtonContainerStyle = {
-        width: 410 * props.width / 560 + 'px',
-        height: 80 * props.width / 560 + 'px'
-    }
-
-    let textStyle = {
-        fontSize: 68 * props.height / 180
-    }
-
-    let minusPlusStyle = {
-        height: 80 * props.height / 180 + 'px',
-        width: 80 * props.height / 180 + 'px'
-    }
+    let settingsButtonStyle = {
+        top: props.params.offsetTop + 'px',
+        right: props.params.offsetSides + 'px',
+        width: props.params.buttonSmallWidth + 'px',
+        height: props.params.buttonHeight + 'px'
+    };
 
     return (
-        <div className={classes.Settings} style={props.style}>         
+        <div className={classes.Settings} style={settingsButtonStyle}>         
             <svg width="94px" height="72px" viewBox="0 0 94 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
                 <g id="Mockup-Without-Video-Unscaled" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
                     <g id="Main" transform="translate(-1733.000000, -104.000000)" fill="#25266C">

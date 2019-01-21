@@ -3,6 +3,7 @@ import classes from './Layout.module.css';
 import EqualizerButton from '../../components/UI/Buttons/EqualizerButton/EqualizerButton';
 import UserVolumeButton from '../../components/UI/Buttons/UserVolumeButton/UserVolumeButton';
 import SettingsButton from '../../components/UI/Buttons/SettingsButton/SettingsButton';
+import MasterVolumeButton from '../../components/UI/Buttons/MasterVolumeButton/MasterVolumeButton';
 
 //all constants should be imported from a global file
 const OFFSET_TOP = 50;
@@ -14,39 +15,24 @@ const BUTTON_LARGE_WIDTH = 560;
 
 class Layout extends Component {
     render() {
-        var userVolumeButtonStyle = {
-            top: OFFSET_TOP + 'px',
-            left: OFFSET_SIDES + 'px',
-            width: BUTTON_LARGE_WIDTH + 'px',
-            height: BUTTON_HEIGHT + 'px'
+        
+        let buttonParameters = {
+            offsetTop: OFFSET_TOP,
+            offsetSides: OFFSET_SIDES,
+            spacing: SPACING,
+            buttonHeight: BUTTON_HEIGHT,
+            buttonSmallWidth: BUTTON_SMALL_WIDTH,
+            buttonLargeWidth: BUTTON_LARGE_WIDTH
         };
 
-        var equalizerButtonStyle = {
-            top: OFFSET_TOP + 'px',
-            left: OFFSET_SIDES*2 + BUTTON_LARGE_WIDTH + 'px',
-            width: BUTTON_SMALL_WIDTH + 'px',
-            height: BUTTON_HEIGHT + 'px'
-        };
-
-        var settingsButtonStyle = {
-            top: OFFSET_TOP + 'px',
-            right: OFFSET_SIDES,
-            width: BUTTON_SMALL_WIDTH + 'px',
-            height: BUTTON_HEIGHT + 'px'
-        };
-
-        var masterVolumeButtonStyle = {
-            top: OFFSET_TOP + 'px',
-            right: OFFSET_SIDES*2 + BUTTON_SMALL_WIDTH + 'px',
-            width: BUTTON_LARGE_WIDTH + 'px',
-            height: BUTTON_HEIGHT + 'px'
-        };
+        console.log(buttonParameters);
 
         return (
             <div className={classes.Layout}>
-                <UserVolumeButton style={userVolumeButtonStyle} width={BUTTON_LARGE_WIDTH} height={BUTTON_HEIGHT} volume={(1.00).toFixed(2)}/>
-                <EqualizerButton style={equalizerButtonStyle} width={BUTTON_SMALL_WIDTH} height={BUTTON_HEIGHT}/>
-                <SettingsButton style={settingsButtonStyle} width={BUTTON_SMALL_WIDTH} height={BUTTON_HEIGHT}/>
+                <UserVolumeButton params={buttonParameters} volume={(1.00).toFixed(2)}/>
+                <EqualizerButton params={buttonParameters}/>
+                <MasterVolumeButton params={buttonParameters}/>
+                <SettingsButton params={buttonParameters}/>
             </div>
         );
     }

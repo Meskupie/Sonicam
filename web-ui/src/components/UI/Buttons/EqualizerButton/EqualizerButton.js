@@ -7,11 +7,15 @@ import Icon from '../../../../assets/UI/equalizergraphic.svg';
 const equalizerButton = (props) => {
     let equalizerClass = [classes.Equalizer];
 
-    //later add switch statement to determine how to display the image
-    //and set class accordingly
+    let equalizerButtonStyle = {
+        top: props.params.offsetTop + 'px',
+        left: props.params.offsetSides * 2 + props.params.buttonLargeWidth + 'px',
+        width: props.params.buttonSmallWidth + 'px',
+        height: props.params.buttonHeight + 'px'
+    };
 
     return (
-        <div className={equalizerClass.join(' ')} style={props.style}>
+        <div className={equalizerClass.join(' ')} style={equalizerButtonStyle}>
             <svg className={classes.Icon} width="144px" height="122px" viewBox="0 0 144 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
                 <defs>
                     <linearGradient x1="50%" y1="100%" x2="50%" y2="-161.10244%" id="linearGradient-1">
