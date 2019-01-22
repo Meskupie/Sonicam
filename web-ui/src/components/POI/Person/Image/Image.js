@@ -16,7 +16,6 @@ const person = (props) => {
         top: props.posXY + 'px',
         width: props.widthHeight + 'px',
         height: props.widthHeight + 'px',
-        borderRadius: props.widthHeight + 'px'
     }
 
     return (

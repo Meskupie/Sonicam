@@ -4,8 +4,6 @@ import classes from './SettingsButton.module.scss';
 const settingsButton = (props) => {
 
     let settingsButtonStyle = {
-        top: props.params.offsetTop + 'px',
-        right: props.params.spacingUI + 'px',
         width: props.params.buttonSmallWidth + 'px',
         height: props.params.buttonHeight + 'px'
     };

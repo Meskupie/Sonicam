@@ -7,8 +7,7 @@ const equalizerButton = (props) => {
     let equalizerClass = [classes.Equalizer];
 
     let equalizerButtonStyle = {
-        top: props.params.offsetTop + 'px',
-        left: props.params.spacingUI * 2 + props.params.buttonLargeWidth + 'px',
+        left: props.params.spacingUI + props.params.buttonLargeWidth + 'px',
         width: props.params.buttonSmallWidth + 'px',
         height: props.params.buttonHeight + 'px'
     };

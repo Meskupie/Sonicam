@@ -4,8 +4,6 @@ import classes from './UserVolumeButton.module.scss';
 const userVolumeButton = (props) => {
 
     var userVolumeButtonStyle = {
-        top: props.params.offsetTop + 'px',
-        left: props.params.spacingUI + 'px',
         width: props.params.buttonLargeWidth + 'px',
         height: props.params.buttonHeight + 'px'
     };

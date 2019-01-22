@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import Aux from '../../hoc/Aux/Aux';
 import Person from '../../components/POI/Person/Person';
+import PersonSelector from '../../components/UI/Indicators/PersonSelector/PersonSelector';
+import classes from './People.module.scss'
 
 class People extends Component {
     constructor(props) {
@@ -8,7 +9,17 @@ class People extends Component {
     }
 
     render() {
-        let pos = [[1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 2], [4, 1], [4, 2], [5, 1], [5, 2]]
+        let pos = [[1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 2], [4, 1], [4, 2], [5, 1], [5, 2], [6, 1]];
+        let selected = [1, 2];
+        let selectPosX = null;
+        let selectPosY = null;
+        let borderWidth = (this.props.widthHeight - this.props.imageWidthHeight - this.props.volumeWidth * 2 - 3) / 2
+
+        let personsContainerStyle = {
+            top: this.props.offsetTop,
+            height: this.props.widthHeight + this.props.widthHeight + borderWidth * 2 + this.props.spacingY
+        }
+
         // let pos = [[1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 2], [4, 1], [4, 2]]
         // let pos = [[1, 1], [2, 1], [3, 1]]
 
@@ -44,7 +55,12 @@ class People extends Component {
             }
 
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
-            let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1) + this.props.offsetTop;
+            let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1);
+
+            if (selected[0] === index[0] && selected[1] === index[1]) {
+                selectPosX = posX;
+                selectPosY = posY;
+            }
 
             return (
                 <Person
@@ -62,9 +78,16 @@ class People extends Component {
         });
 
         return (
-            <Aux>
+            <div className={[classes.PeopleContainer, classes.Scrollable].join(' ')} style={personsContainerStyle}>
                 {persons}
-            </Aux>
+                <PersonSelector
+                    borderWidth={borderWidth}
+                    widthHeight={this.props.widthHeight + borderWidth * 2}
+                    posX={selectPosX - borderWidth * 2}
+                    posY={selectPosY - borderWidth * 2}
+
+                />
+            </div>
         );
     }
 }

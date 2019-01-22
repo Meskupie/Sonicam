@@ -2,6 +2,8 @@
 
 .VolumeButton {
     position: absolute;
+    top: 0px;
+    left: 0px;
     background-image: $gradient;
     box-shadow: $large-shadow;
     border-radius: 45px;

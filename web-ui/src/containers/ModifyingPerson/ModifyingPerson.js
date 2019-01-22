@@ -25,7 +25,8 @@ class ModifyingPerson extends Component {
             console.log(index);
             let x = index
 
-            let posX = this.props.spacingX * (x - 1) + this.props.imageWidthHeight * (x - 1);
+            //TODO: basically hardcoded to get a partial cut off of the last element. Could calculate this instead
+            let posX = (this.props.spacingX - 10) * (x - 1) + this.props.imageWidthHeight * (x - 1);
 
             return (
                 <Person
@@ -39,7 +40,7 @@ class ModifyingPerson extends Component {
         });
 
         return (
-            <div className={classes.PersonContainer} style={personContainerStyle}>
+            <div className={[classes.PersonContainer, classes.Scrollable].join(' ')} style={personContainerStyle}>
                 {persons}
             </div>
         );
