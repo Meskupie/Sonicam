@@ -1,6 +1,5 @@
 import React from 'react';
 import classes from './EqualizerButton.module.scss';
-import Icon from '../../../../assets/UI/equalizergraphic.svg';
 
 //const equalizerButton = () => <Icon/>;
 
@@ -9,7 +8,7 @@ const equalizerButton = (props) => {
 
     let equalizerButtonStyle = {
         top: props.params.offsetTop + 'px',
-        left: props.params.offsetSides * 2 + props.params.buttonLargeWidth + 'px',
+        left: props.params.spacingUI * 2 + props.params.buttonLargeWidth + 'px',
         width: props.params.buttonSmallWidth + 'px',
         height: props.params.buttonHeight + 'px'
     };

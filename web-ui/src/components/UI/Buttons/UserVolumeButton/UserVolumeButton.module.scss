@@ -12,7 +12,10 @@
 
 .VolumeButtonContainer {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    width: 100%;
+    height: 100%;
 }
 
 .Text {
@@ -30,4 +33,18 @@
 .Plus {
     display: flex;
     align-items: center;
+}
+
+.ButtonMinus {
+    position: absolute;
+    left: 0px;
+    height: 100%;
+    width: 50%;
+}
+
+.ButtonPlus {
+    position: absolute;
+    right: 0px;
+    height: 100%;
+    width: 50%;
 }

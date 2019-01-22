@@ -2,6 +2,7 @@ import React from 'react';
 import classes from './Person.module.css'
 import Image from './Image/Image'
 import Volume from './Volume/Volume'
+import Aux from '../../../hoc/Aux/Aux';
 
 //Where the face video/images will be displayed
 //either when tracked, when adding new faces or when
@@ -17,30 +18,40 @@ const person = (props) => {
     personClass.push(classes.Overview);
 
     var posStyle = {
-        left: props.pos_x + 'px',
-        top: props.pos_y + 'px',
+        left: props.posX + 'px',
+        top: props.posY + 'px',
         height: props.widthHeight + 'px',
         width: props.widthHeight + 'px',
     }
 
+    let volume = null;
+
+    if (props.volumeState != null) {
+        volume = (
+            <Aux>
+                <Volume
+                    widthHeight={props.widthHeight}
+                    volume={props.normalizerVolume}
+                    volumeWidth={props.volumeWidth}
+                    voulumeSpacing={props.voulumeSpacing}
+                    type={"normalizer"}
+                    state={props.volumeState}
+                />
+                <Volume
+                    widthHeight={props.widthHeight}
+                    volume={props.multiplierVolume}
+                    volumeWidth={props.volumeWidth}
+                    voulumeSpacing={props.voulumeSpacing}
+                    type={"multiplier"}
+                    state={props.volumeState}
+                />
+            </Aux>
+            );
+    }
+
     return (
         <div className={personClass.join(' ')} style={posStyle}>
-            <Volume
-                widthHeight={props.widthHeight}
-                volume={props.normalizerVolume}
-                volumeWidth={props.volumeWidth}
-                voulumeSpacing={props.voulumeSpacing}
-                type={"normalizer"}
-                state={props.state}
-            />
-            <Volume
-                widthHeight={props.widthHeight}
-                volume={props.multiplierVolume}
-                volumeWidth={props.volumeWidth}
-                voulumeSpacing={props.voulumeSpacing}
-                type={"multiplier"}
-                state={props.state}
-            />
+            {volume}
             <Image
                 posXY={(props.widthHeight - props.imgWidthHeight) / 2}
                 widthHeight={props.imgWidthHeight}

@@ -5,7 +5,7 @@ const userVolumeButton = (props) => {
 
     var userVolumeButtonStyle = {
         top: props.params.offsetTop + 'px',
-        left: props.params.offsetSides + 'px',
+        left: props.params.spacingUI + 'px',
         width: props.params.buttonLargeWidth + 'px',
         height: props.params.buttonHeight + 'px'
     };
@@ -26,6 +26,8 @@ const userVolumeButton = (props) => {
 
     return (
         <div className={classes.VolumeButton} style={userVolumeButtonStyle}>
+            <div className={classes.ButtonMinus}></div>
+            <div className={classes.ButtonPlus}></div>
             <div className={classes.VolumeButtonContainer} style={volumeButtonContainerStyle}>
                 <div className={classes.Minus} style={minusPlusStyle}>
 

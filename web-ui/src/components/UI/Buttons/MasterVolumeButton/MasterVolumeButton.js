@@ -16,7 +16,7 @@ class masterVolumeButton extends Component {
     render() {
         let masterVolumeButtonStyle = {
             top: this.props.params.offsetTop + 'px',
-            right: this.props.params.offsetSides * 2 + this.props.params.buttonSmallWidth + 'px',
+            right: this.props.params.spacingUI * 2 + this.props.params.buttonSmallWidth + 'px',
             width: this.props.params.buttonLargeWidth + 'px',
             height: this.props.params.buttonHeight + 'px'
         };
