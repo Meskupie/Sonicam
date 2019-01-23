@@ -6,8 +6,7 @@ import SettingsButton from '../../components/UI/Buttons/SettingsButton/SettingsB
 import MasterVolumeButton from '../../components/UI/Buttons/MasterVolumeButton/MasterVolumeButton';
 
 class Layout extends Component {
-    render() {
-        
+    render() {        
         let buttonParameters = {
             offsetTop: this.props.offsetTop,
             spacingUI: this.props.spacingUI,
@@ -27,9 +26,16 @@ class Layout extends Component {
 
         return (
             <div className={classes.Layout} style={buttonContainerStyle}>
-                <UserVolumeButton params={buttonParameters} volume={(1.00).toFixed(2)}/>
+                <UserVolumeButton 
+                    params={buttonParameters} 
+                    volume={(this.props.userVolume).toFixed(2)}
+                    clickedPlus={(event) => this.props.userVolumeChangeHandler(event, 'up')}
+                    clickedMinus={(event) => this.props.userVolumeChangeHandler(event, 'down')}/>
                 <EqualizerButton params={buttonParameters}/>
-                <MasterVolumeButton params={buttonParameters}/>
+                <MasterVolumeButton 
+                    params={buttonParameters}
+                    changed={(event) => this.props.masterVolumeChangeHandler(event)}
+                    volume={this.props.masterVolume * 100}/>
                 <SettingsButton params={buttonParameters}/>
             </div>
         );

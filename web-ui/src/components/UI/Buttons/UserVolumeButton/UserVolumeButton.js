@@ -24,8 +24,8 @@ const userVolumeButton = (props) => {
 
     return (
         <div className={classes.VolumeButton} style={userVolumeButtonStyle}>
-            <div className={classes.ButtonMinus}></div>
-            <div className={classes.ButtonPlus}></div>
+            <div className={classes.ButtonMinus} onClick={props.clickedMinus}></div>
+            <div className={classes.ButtonPlus} onClick={props.clickedPlus}></div>
             <div className={classes.VolumeButtonContainer} style={volumeButtonContainerStyle}>
                 <div className={classes.Minus} style={minusPlusStyle}>
 

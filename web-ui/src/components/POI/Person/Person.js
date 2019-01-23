@@ -3,19 +3,12 @@ import classes from './Person.module.css'
 import Image from './Image/Image'
 import Volume from './Volume/Volume'
 import Aux from '../../../hoc/Aux/Aux';
-
-//Where the face video/images will be displayed
-//either when tracked, when adding new faces or when
-//modifying a current tracked face
+import IndicatorText from './IndicatorText/IndicatorText';
 
 const person = (props) => {
     let personClass = [];
     personClass.push(classes.Person);
 
-    //later add switch statement to determine how to display the faces
-    //and set class accordingly
-
-    personClass.push(classes.Overview);
 
     var posStyle = {
         left: props.posX + 'px',
@@ -50,12 +43,17 @@ const person = (props) => {
     }
 
     return (
-        <div className={personClass.join(' ')} style={posStyle}>
-            {volume}
-            <Image
-                posXY={(props.widthHeight - props.imgWidthHeight) / 2}
-                widthHeight={props.imgWidthHeight}
-            />
+        <div className={personClass.join(' ')} style={posStyle} onClick={props.clicked}>
+            <div className={classes.PersonContainer}>
+                {volume}
+                <Image
+                    posXY={(props.widthHeight - props.imgWidthHeight) / 2}
+                    widthHeight={props.imgWidthHeight}
+                />
+            </div>
+            <IndicatorText>
+
+            </IndicatorText>
         </div>
     );
 }

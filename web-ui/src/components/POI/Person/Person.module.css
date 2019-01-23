@@ -2,14 +2,7 @@
     position: absolute;
 }
 
-.Overview {
-
-}
-
-.Untracked {
-    /*Some color overlay*/
-}
-
-.Muted {
-    /*Some overlay to make it obvious that someone is muted*/
+.PersonContainer {
+    width: 100%;
+    height: 100%;
 }

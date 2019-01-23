@@ -51,7 +51,7 @@ const volume = (props) => {
         <Aux>
             <svg viewBox="0 0 36 36" className={circleClass.join(' ')} style={viewBoxStyle}>
                 <path className={classes.Circle} style={circleStyle}
-                    strokeDasharray={(props.volume / 4) / (100 / (((props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36)) * 2 * Math.PI)) + ", " + (((props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36)) * 2 * Math.PI)}
+                    strokeDasharray={(props.volume * 100 / 4) / (100 / (((props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36)) * 2 * Math.PI)) + ", " + (((props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36)) * 2 * Math.PI)}
                     d={"M " + (props.widthHeight / 2) / (props.widthHeight / 36) + " " + props.volumeWidth / 2 / (props.widthHeight / 36) +
                         " a " + (props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36) + " " + (props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36) + " 0 0 1 0 " + (props.widthHeight - props.volumeWidth) / (props.widthHeight / 36) +
                         " a " + (props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36) + " " + (props.widthHeight / 2 - props.volumeWidth / 2) / (props.widthHeight / 36) + " 0 0 1 0 " + (-props.widthHeight + props.volumeWidth) / (props.widthHeight / 36)}
