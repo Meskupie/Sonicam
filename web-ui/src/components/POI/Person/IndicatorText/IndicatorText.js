@@ -6,9 +6,7 @@ import classes from './IndicatorText.module.scss';
 //modifying a current tracked face
 
 const indicatorText = (props) => {
-    let personSelectorStyle = {
-        
-    }
+    
     
     return (
         <div className = {classes.Text}>

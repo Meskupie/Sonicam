@@ -1,5 +1,4 @@
 .Image{
-    position: relative;
-    background-color: lightgray;
+    position: absolute;
     border-radius: 50%;
 }

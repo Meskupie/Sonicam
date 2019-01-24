@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import classes from './App.module.scss';
 import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
-import ModifyingPerson from './containers/ModifyingPerson/ModifyingPerson';
 
 const SPACING_Y = 90;
 const SPACING_X = 80;
@@ -58,6 +57,19 @@ class App extends Component {
         thumb: "https://images.unsplash.com/photo-1485178575877-1a13bf489dfe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1291&q=80",
         position: [2, 1],
         soundStatus: "poor"
+      },
+      {
+        id: 4,
+        is_visible: null,
+        is_known: null,
+        importance: 2,
+        name: "Name",
+        mute: null,
+        volumeMultiplier: 1,
+        volumeNormaliser: Math.random() * .3,
+        thumb: "https://images.unsplash.com/photo-1485178575877-1a13bf489dfe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1291&q=80",
+        position: [2, 2],
+        soundStatus: "normal"
       }]
     };
   }
@@ -86,13 +98,11 @@ class App extends Component {
     this.setState({ POIs: POIs });
   }
 
-  POIClickedHandler = (selectedPOI) => {
-    this.setState({ selectedPOI, selectedPOI });
+  POIClickedHandler = (selectedId) => {
+    this.setState({ selectedPOI: selectedId });
   }
 
   render() {
-
-
 
     return (
       <div className={classes.App}>

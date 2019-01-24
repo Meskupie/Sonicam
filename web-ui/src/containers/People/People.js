@@ -3,10 +3,15 @@ import Person from '../../components/POI/Person/Person';
 import PersonSelector from '../../components/UI/Indicators/PersonSelector/PersonSelector';
 import classes from './People.module.scss'
 import Aux from '../../hoc/Aux/Aux';
+import { getVideoFeed } from '../../hoc/GetVideoFeed/GetVideoFeed';
 
 class People extends Component {
     constructor(props) {
         super(props);
+        getVideoFeed((err, image) => {
+            let parsedImage = JSON.parse(image);
+            this.setState({ parsedImage });
+        });
     }
 
     render() {
@@ -24,8 +29,6 @@ class People extends Component {
             let x = POI.position[0];
             let y = POI.position[1];
 
-            console.log(this.props);
-
             let multiplierVolume = POI.volumeMultiplier * this.props.state.masterVolume;
             let normalizerVolume = POI.volumeNormaliser + multiplierVolume;
 
@@ -35,6 +38,13 @@ class People extends Component {
             if (selected.position[0] === x && selected.position[1] === y) {
                 selectPosX = posX;
                 selectPosY = posY;
+            }
+
+            let image = " ";
+
+            if (this.state != null) {
+                console.log(this.state.image);
+                //image = "data:image/jpeg;charset=utf-8;base64," + this.state.image;
             }
 
             return (
@@ -49,6 +59,7 @@ class People extends Component {
                     multiplierVolume={multiplierVolume}
                     volumeState={POI.soundStatus}
                     clicked={(event) => this.props.POIClickedHandler(POI.id)}
+                    imgSource={image}
                 />
             );
         });

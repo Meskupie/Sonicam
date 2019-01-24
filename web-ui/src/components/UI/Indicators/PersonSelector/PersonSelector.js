@@ -6,6 +6,7 @@ import classes from './PersonSelector.module.scss';
 //modifying a current tracked face
 
 const personSelector = (props) => {
+    
     let personSelectorStyle = {
         top: props.posY + "px",
         left: props.posX + "px",

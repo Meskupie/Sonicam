@@ -19,9 +19,7 @@ const person = (props) => {
     }
 
     return (
-        <div className={imageClass.join(' ')} style={posStyle}>
-            {/*Have image tag here with width,height 100% */}
-        </div>
+        <img alt="POI Video Feed" src={props.imgSource} className={imageClass.join(' ')} style={posStyle}/>
     );
 }
 
