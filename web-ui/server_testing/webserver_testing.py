@@ -35,7 +35,7 @@ def sending():
             frame1 = frame[0:400,0:400,:]
             frame2 = frame[0:400,400:800,:]
             frame3 = frame[0:400,800:1200,:]
-            frame4 = frame[200:600,600:800,:]
+            frame4 = frame[200:600,600:1000,:]
 
             ret1, frame_encoded1 = cv2.imencode('.jpg',frame1)
             ret2, frame_encoded2 = cv2.imencode('.jpg',frame2)

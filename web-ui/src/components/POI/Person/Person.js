@@ -44,13 +44,14 @@ const person = (props) => {
 
     return (
 
-        <div className={personClass.join(' ')} style={posStyle} onClick={props.clicked}>
+        <div className={personClass.join(' ')} style={posStyle}>
             <div className={classes.PersonContainer}>
                 {volume}
                 <Image
                     posXY={(props.widthHeight - props.imgWidthHeight) / 2}
                     widthHeight={props.imgWidthHeight}
                     imgSource={props.imgSource}
+                    clicked={props.clicked}
                 />
             </div>
             <IndicatorText>

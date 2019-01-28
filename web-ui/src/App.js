@@ -102,10 +102,18 @@ class App extends Component {
     this.setState({ selectedPOI: selectedId });
   }
 
+  backgroundClickedHandler(event){
+    console.log('div clicked');
+    if(event.target !== this){
+      return;
+    }
+    console.log('background clicked');
+  }
+
   render() {
 
     return (
-      <div className={classes.App}>
+      <div className={classes.App} onClick={this.backgroundClickedHandler.bind(this)} >
         <Layout
           offsetTop={SPACING_UI}
           spacingUI={SPACING_UI}

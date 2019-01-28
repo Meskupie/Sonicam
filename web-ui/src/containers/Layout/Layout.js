@@ -22,8 +22,6 @@ class Layout extends Component {
             height: this.props.buttonHeight
         }
 
-        console.log(buttonParameters);
-
         return (
             <div className={classes.Layout} style={buttonContainerStyle}>
                 <UserVolumeButton 

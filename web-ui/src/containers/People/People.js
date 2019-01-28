@@ -43,8 +43,7 @@ class People extends Component {
             let image = " ";
 
             if (this.state != null) {
-                console.log(this.state.image);
-                //image = "data:image/jpeg;charset=utf-8;base64," + this.state.image;
+                image = "data:image/jpeg;charset=utf-8;base64," + this.state.parsedImage[POI.id];
             }
 
             return (
