@@ -3,15 +3,17 @@ import classes from './App.module.scss';
 import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
 
-const SPACING_Y = 90;
-const SPACING_X = 80;
-const WIDTH_HEIGHT = 300;
-const IMAGE_WIDTH_HEIGHT = 215;
-const VOLUME_WIDTH = 30;
-const SPACING_UI = 50;
-const BUTTON_HEIGHT = 180;
-const BUTTON_SMALL_WIDTH = 180;
-const BUTTON_LARGE_WIDTH = 560;
+const APP_WIDTH = 800;
+const APP_HEIGHT = 480;
+const WIDTH_HEIGHT = 134;
+const IMAGE_WIDTH_HEIGHT = 100;
+const VOLUME_WIDTH = 12;
+const SPACING_UI = 23;
+const BUTTON_HEIGHT = 80;
+const BUTTON_SMALL_WIDTH = 80;
+const BUTTON_LARGE_WIDTH = 250;
+const SPACING_Y = 45;
+const SPACING_X = (APP_WIDTH-SPACING_UI*2-WIDTH_HEIGHT*4)/3;
 
 class App extends Component {
   constructor(props) {
@@ -42,7 +44,7 @@ class App extends Component {
         volumeMultiplier: 1,
         volumeNormaliser: Math.random() * .3,
         thumb: "https://images.unsplash.com/photo-1485178575877-1a13bf489dfe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1291&q=80",
-        position: [1, 2],
+        position: [2, 1],
         soundStatus: "muted"
       },
       {
@@ -55,7 +57,7 @@ class App extends Component {
         volumeMultiplier: 1,
         volumeNormaliser: Math.random() * .3,
         thumb: "https://images.unsplash.com/photo-1485178575877-1a13bf489dfe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1291&q=80",
-        position: [2, 1],
+        position: [3, 1],
         soundStatus: "poor"
       },
       {
@@ -68,7 +70,7 @@ class App extends Component {
         volumeMultiplier: 1,
         volumeNormaliser: Math.random() * .3,
         thumb: "https://images.unsplash.com/photo-1485178575877-1a13bf489dfe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1291&q=80",
-        position: [2, 2],
+        position: [4, 1],
         soundStatus: "normal"
       }]
     };
@@ -79,6 +81,7 @@ class App extends Component {
   }
 
   userVolumeChangeHandler = (event, upOrDown) => {
+    event.stopPropagation();
     const personIndex = this.state.POIs.findIndex(x => x.id === this.state.selectedPOI);
 
     const POI = {
@@ -98,22 +101,19 @@ class App extends Component {
     this.setState({ POIs: POIs });
   }
 
-  POIClickedHandler = (selectedId) => {
+  POIClickedHandler = (event, selectedId) => {
+    event.stopPropagation();
     this.setState({ selectedPOI: selectedId });
   }
 
   backgroundClickedHandler(event){
     console.log('div clicked');
-    if(event.target !== this){
-      return;
-    }
-    console.log('background clicked');
   }
 
   render() {
 
     return (
-      <div className={classes.App} onClick={this.backgroundClickedHandler.bind(this)} >
+      <div className={classes.App} onMouseDown={this.backgroundClickedHandler.bind(this)} >
         <Layout
           offsetTop={SPACING_UI}
           spacingUI={SPACING_UI}

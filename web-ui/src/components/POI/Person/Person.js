@@ -3,7 +3,7 @@ import classes from './Person.module.css'
 import Image from './Image/Image'
 import Volume from './Volume/Volume'
 import Aux from '../../../hoc/Aux/Aux';
-import IndicatorText from './IndicatorText/IndicatorText';
+import IndicatorText from './Text/Text';
 
 const person = (props) => {
     let personClass = [];

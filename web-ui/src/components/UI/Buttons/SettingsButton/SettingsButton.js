@@ -10,7 +10,7 @@ const settingsButton = (props) => {
 
     return (
         <div className={classes.Settings} style={settingsButtonStyle}>         
-            <svg width="94px" height="72px" viewBox="0 0 94 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+            <svg width={props.params.buttonSmallWidth * 42/80 + "px"} height={props.params.buttonHeight * 33/80 + "px"} viewBox="0 0 94 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
                 <g id="Mockup-Without-Video-Unscaled" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
                     <g id="Main" transform="translate(-1733.000000, -104.000000)" fill="#25266C">
                         <g id="Setttings-Button" transform="translate(1733.000000, 104.000000)">

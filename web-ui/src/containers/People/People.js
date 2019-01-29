@@ -18,26 +18,35 @@ class People extends Component {
         let selected = this.props.state.POIs.find(x => x.id === this.props.state.selectedPOI);
         let selectPosX = null;
         let selectPosY = null;
-        let borderWidth = (this.props.widthHeight - this.props.imageWidthHeight - this.props.volumeWidth * 2 - 3) / 2
+        let borderWidth = (this.props.widthHeight - this.props.imageWidthHeight - this.props.volumeWidth * 2 -.5) / 2;
+        let selectedIndicator = null;
 
         let personsContainerStyle = {
-            top: this.props.offsetTop,
-            height: this.props.widthHeight + this.props.widthHeight + borderWidth * 2 + this.props.spacingY
+            top: this.props.offsetTop - borderWidth*2,
+            height: this.props.widthHeight + this.props.widthHeight + borderWidth * 2 + this.props.spacingY + borderWidth * 2
         }
 
         let persons = this.props.state.POIs.map(POI => {
             let x = POI.position[0];
             let y = POI.position[1];
+            selectedIndicator = null;
 
             let multiplierVolume = POI.volumeMultiplier * this.props.state.masterVolume;
             let normalizerVolume = POI.volumeNormaliser + multiplierVolume;
 
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
-            let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1);
+            let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1) + borderWidth * 2;
 
             if (selected.position[0] === x && selected.position[1] === y) {
                 selectPosX = posX;
                 selectPosY = posY;
+                selectedIndicator =
+                    <PersonSelector
+                        borderWidth={borderWidth}
+                        widthHeight={this.props.widthHeight + borderWidth * 2}
+                        posX={selectPosX - borderWidth * 2}
+                        posY={selectPosY - borderWidth * 2}
+                    />;
             }
 
             let image = " ";
@@ -47,35 +56,29 @@ class People extends Component {
             }
 
             return (
-                <Person
-                    key={POI.id}
-                    posX={posX}
-                    posY={posY}
-                    widthHeight={this.props.widthHeight}
-                    imgWidthHeight={this.props.imageWidthHeight}
-                    volumeWidth={this.props.volumeWidth}
-                    normalizerVolume={normalizerVolume}
-                    multiplierVolume={multiplierVolume}
-                    volumeState={POI.soundStatus}
-                    clicked={(event) => this.props.POIClickedHandler(POI.id)}
-                    imgSource={image}
-                />
+                <Aux>
+                    <Person
+                        key={POI.id}
+                        posX={posX}
+                        posY={posY}
+                        widthHeight={this.props.widthHeight}
+                        imgWidthHeight={this.props.imageWidthHeight}
+                        volumeWidth={this.props.volumeWidth}
+                        normalizerVolume={normalizerVolume}
+                        multiplierVolume={multiplierVolume}
+                        volumeState={POI.soundStatus}
+                        clicked={(event) => this.props.POIClickedHandler(event, POI.id)}
+                        imgSource={image}
+                    />
+                    {selectedIndicator}
+                </Aux>
             );
         });
 
         return (
-            <Aux>
-                <div className={[classes.PeopleContainer, classes.Scrollable].join(' ')} style={personsContainerStyle}>
-                    {persons}
-                </div>
-                <PersonSelector
-                    borderWidth={borderWidth}
-                    widthHeight={this.props.widthHeight + borderWidth * 2}
-                    posX={selectPosX - borderWidth * 2}
-                    posY={selectPosY - borderWidth * 2 + this.props.offsetTop}
-
-                />
-            </Aux>
+            <div className={[classes.PeopleContainer, classes.Scrollable].join(' ')} style={personsContainerStyle}>
+                {persons}
+            </div>
         );
     }
 }
