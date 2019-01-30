@@ -18,10 +18,28 @@ socket = SocketIO(app)#, logger=True, engineio_logger=True)
 
 kill_all = False
 
+def addDetectionToFrame(frame,detection,height=1080):
+    scale = 1
+    for result in detection:
+        bounding_box = [int(round(x*scale)) for x in result['box']]
+        keypoints = result['keypoints']
+
+        cv2.rectangle(frame,
+                      (bounding_box[0], bounding_box[1]),
+                      (bounding_box[0]+bounding_box[2], bounding_box[1] + bounding_box[3]),
+                      (0,155,255),
+                      2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['left_eye']), 1, (0,0,255), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['right_eye']), 1, (0,0,255), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['nose']), 1, (0,0,255), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['mouth_left']), 1, (0,255,0), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['mouth_right']), 1, (0,255,0), 2)
+    return frame
+
 
 @app.route('/')
 def index():
-    return render_template('index.html', name='Michael')
+    return render_template('index.html')
 
 
 def sending():
