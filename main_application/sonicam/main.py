@@ -23,6 +23,7 @@ install_mp_handler()
 from parameters import *
 from frameserver import FrameServer
 from measurement import FaceDetector
+from webserver import WebServer
 
 # Set up a dictionary of queues to be used in message excange between processes
 queue_dict = {}
@@ -49,8 +50,8 @@ shared_pyramid_frames = [(raw_pyramid_arrays[i],np.frombuffer(raw_pyramid_arrays
 # Initialize processes
 src = '../data/sample_video.mp4' # None
 video_driver = FrameServer('FrameServer',src,queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames)
-
 face_detector = FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames)
+#web_server = WebServer('WebServer',queue_dict,shared_buffer_frames)
 
 # Thread for killing program on enter
 def waitForInput(queue):
@@ -58,28 +59,8 @@ def waitForInput(queue):
     queue.put({'type':'kill'})
 t.Thread(target=waitForInput,daemon=True,args=(queue_dict['main'],)).start()
 
-def addDetectionToFrame(frame,detection,height=1080):
-    scale = 1
-    for result in detection:
-        bounding_box = [int(round(x*scale)) for x in result['box']]
-        keypoints = result['keypoints']
-
-        cv2.rectangle(frame,
-                      (bounding_box[0], bounding_box[1]),
-                      (bounding_box[0]+bounding_box[2], bounding_box[1] + bounding_box[3]),
-                      (0,155,255),
-                      2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['left_eye']), 1, (0,0,255), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['right_eye']), 1, (0,0,255), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['nose']), 1, (0,0,255), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['mouth_left']), 1, (0,255,0), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in keypoints['mouth_right']), 1, (0,255,0), 2)
-    return frame
 
 time_last = 0
-plt.ion()
-plt.show()
-
 # Main loop
 while True:
     job = queue_dict['main'].get()
@@ -100,14 +81,8 @@ while True:
             if time_last != 0:
                 logging.info('Detection Frequency: '+str(1/(time_now-time_last))+' Hz')
             time_last = time_now
-            frame = shared_vars['buffer_frames'][job['buffer_index']][1].copy()
-            queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
             
-            image = addDetectionToFrame(frame,results)
-            plt.clf()
-            plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            plt.draw()
-            plt.pause(0.001)
+            queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
             
             queue_dict['face_detector'].put({'type':'detect'})
         
