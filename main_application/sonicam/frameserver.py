@@ -11,123 +11,6 @@ from parameters import *
 # ===================================
 #
 # ===================================
-class CameraDriverWorker(mp.Process):
-    # Barebones initialization, pass shared data structures into the process and start it
-    def __init__(self,name,src,run_event,parent_queue,buffer_frames,buffer_times,buffer_index):
-        super(CameraDriverWorker, self).__init__()
-        self.name = name
-        self.src = src
-        self.src_cam = -1
-        self.run_event = run_event
-        self.parent_queue = parent_queue
-        
-        global shared_vars
-        shared_vars['buffer_frames'] = buffer_frames
-        shared_vars['buffer_times'] = buffer_times
-        shared_vars['buffer_index'] = buffer_index
-        
-        self.start()
-    
-    def newFrameToBuffer(self,frame):
-        # Update buffer with new frame
-        with shared_vars['buffer_index'].get_lock():
-            shared_vars['buffer_index'].value = (int(shared_vars['buffer_index'].value)+1) %param_image_buffer_length
-            buffer_index = int(shared_vars['buffer_index'].value)
-            with shared_vars['buffer_frames'][buffer_index][0].get_lock():
-                # Dump image data into buffer
-                shared_vars['buffer_frames'][buffer_index][1][:] = frame
-                with shared_vars['buffer_times'][0].get_lock():
-                    shared_vars['buffer_times'][1][buffer_index] = time.time()
-        return buffer_index
-    
-    def spinFrameCapture(self):
-        while self.run_event.is_set():
-            if not self.src == self.src_cam:
-                cap = cv2.VideoCapture(self.src)
-                hz = cap.get(cv2.CAP_PROP_FPS)
-            while self.run_event.is_set() and cap.isOpened():
-                start = time.time()
-                ret,frame = cap.read()
-                if not ret: break # broken video capture object
-                buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
-                self.parent_queue.put({'type':'camera','index':buffer_index})
-                # Delay
-                if not self.src == self.src_cam:
-                    time.sleep(max(0,(1/hz)-(time.time()-start)))
-                else:
-                    # TODO: fix for when we have a real camera
-                    pass
-            if cap.isOpened():
-                cap.release()
-            else:
-                logging.debug('Restarting capture')
-                
-    def run(self):
-        logging.debug('Started')
-        self.spinFrameCapture()
-        logging.debug('Shutting Down')
-
-# ===================================
-#
-# ===================================
-class ImageProcessingWorker(mp.Process):
-    # Barebones initialization, pass shared data structures into the process and start it
-    def __init__(self,name,run_event,parent_queue,job_queue,buffer_frames,buffer_times,buffer_index,pyramid_frames):
-        super(ImageProcessingWorker, self).__init__()
-        self.name = name
-        self.run_event = run_event
-        self.parent_queue = parent_queue
-        self.job_queue = job_queue
-        
-        global shared_vars
-        shared_vars['buffer_frames'] = buffer_frames
-        shared_vars['buffer_times'] = buffer_times
-        shared_vars['buffer_index'] = buffer_index
-        shared_vars['pyramid_frames'] = pyramid_frames
-        
-        self.start()
-        
-    def servicePyramid(self,job):
-        completed = []
-        for pattern in job['patterns']:
-            for i,scale_i in enumerate(pattern):
-                if scale_i not in completed:
-                    if i == 0: # 'Run from base to',param_pyramid_shapes[scale_i],'store at',scale_i
-                        frame = cv2.resize(shared_vars['buffer_frames'][job['buffer_index']][1],param_pyramid_shapes[scale_i][0:2][::-1],interpolation = cv2.INTER_AREA)
-                    else: # 'Run from',pattern[i-1],'to',param_pyramid_shapes[scale_i],'store at',scale_i
-                        frame = cv2.resize(shared_vars['pyramid_frames'][pattern[i-1]][1],param_pyramid_shapes[scale_i][0:2][::-1],interpolation = cv2.INTER_AREA)
-                    with shared_vars['pyramid_frames'][scale_i][0].get_lock():
-                            shared_vars['pyramid_frames'][scale_i][1][:] = frame
-                    completed.append(scale_i)
-                    self.parent_queue.put({'type':'pyramid_ack','pyramid_index':scale_i,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
-    
-    def serviceJobs(self):
-        while self.run_event.is_set():
-            job = self.job_queue.get()
-            
-            if job['type'] == 'pyramid':
-                self.servicePyramid(job)
-            
-            # {'type':'crop','loctions':(((x0,y0),(x1,y1)),),shape':(h,w),
-            # 'buffer_index':int,'pipe':connector}
-            elif job['type'] == 'crop':
-                pass
-            
-            elif job['type'] == 'kill': # The message to kill the thread
-                self.job_queue.put({'type':'kill'}) # Replaced used kill job
-                break
-                
-            else:
-                logging.error('Unknown job')
-    
-    def run(self):
-        logging.debug('Started')
-        self.serviceJobs()
-        logging.debug('Shutting Down')
-
-# ===================================
-#
-# ===================================
 class FrameServer(mp.Process):
     # Barebones initialization, pass shared data structures into the process and start it
     def __init__(self,name,src,queues,buffer_frames,buffer_times,buffer_index,pyramid_frames):
@@ -333,3 +216,120 @@ class FrameServer(mp.Process):
     def kill(self):
         self.job_queue.put({'type':'kill'})
         self.join()
+
+# ===================================
+#
+# ===================================
+class CameraDriverWorker(mp.Process):
+    # Barebones initialization, pass shared data structures into the process and start it
+    def __init__(self,name,src,run_event,parent_queue,buffer_frames,buffer_times,buffer_index):
+        super(CameraDriverWorker, self).__init__()
+        self.name = name
+        self.src = src
+        self.src_cam = -1
+        self.run_event = run_event
+        self.parent_queue = parent_queue
+        
+        global shared_vars
+        shared_vars['buffer_frames'] = buffer_frames
+        shared_vars['buffer_times'] = buffer_times
+        shared_vars['buffer_index'] = buffer_index
+        
+        self.start()
+    
+    def newFrameToBuffer(self,frame):
+        # Update buffer with new frame
+        with shared_vars['buffer_index'].get_lock():
+            shared_vars['buffer_index'].value = (int(shared_vars['buffer_index'].value)+1) %param_image_buffer_length
+            buffer_index = int(shared_vars['buffer_index'].value)
+            with shared_vars['buffer_frames'][buffer_index][0].get_lock():
+                # Dump image data into buffer
+                shared_vars['buffer_frames'][buffer_index][1][:] = frame
+                with shared_vars['buffer_times'][0].get_lock():
+                    shared_vars['buffer_times'][1][buffer_index] = time.time()
+        return buffer_index
+    
+    def spinFrameCapture(self):
+        while self.run_event.is_set():
+            if not self.src == self.src_cam:
+                cap = cv2.VideoCapture(self.src)
+                hz = cap.get(cv2.CAP_PROP_FPS)
+            while self.run_event.is_set() and cap.isOpened():
+                start = time.time()
+                ret,frame = cap.read()
+                if not ret: break # broken video capture object
+                buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
+                self.parent_queue.put({'type':'camera','index':buffer_index})
+                # Delay
+                if not self.src == self.src_cam:
+                    time.sleep(max(0,(1/hz)-(time.time()-start)))
+                else:
+                    # TODO: fix for when we have a real camera
+                    pass
+            if cap.isOpened():
+                cap.release()
+            else:
+                logging.debug('Restarting capture')
+                
+    def run(self):
+        logging.debug('Started')
+        self.spinFrameCapture()
+        logging.debug('Shutting Down')
+
+# ===================================
+#
+# ===================================
+class ImageProcessingWorker(mp.Process):
+    # Barebones initialization, pass shared data structures into the process and start it
+    def __init__(self,name,run_event,parent_queue,job_queue,buffer_frames,buffer_times,buffer_index,pyramid_frames):
+        super(ImageProcessingWorker, self).__init__()
+        self.name = name
+        self.run_event = run_event
+        self.parent_queue = parent_queue
+        self.job_queue = job_queue
+        
+        global shared_vars
+        shared_vars['buffer_frames'] = buffer_frames
+        shared_vars['buffer_times'] = buffer_times
+        shared_vars['buffer_index'] = buffer_index
+        shared_vars['pyramid_frames'] = pyramid_frames
+        
+        self.start()
+        
+    def servicePyramid(self,job):
+        completed = []
+        for pattern in job['patterns']:
+            for i,scale_i in enumerate(pattern):
+                if scale_i not in completed:
+                    if i == 0: # 'Run from base to',param_pyramid_shapes[scale_i],'store at',scale_i
+                        frame = cv2.resize(shared_vars['buffer_frames'][job['buffer_index']][1],param_pyramid_shapes[scale_i][0:2][::-1],interpolation = cv2.INTER_AREA)
+                    else: # 'Run from',pattern[i-1],'to',param_pyramid_shapes[scale_i],'store at',scale_i
+                        frame = cv2.resize(shared_vars['pyramid_frames'][pattern[i-1]][1],param_pyramid_shapes[scale_i][0:2][::-1],interpolation = cv2.INTER_AREA)
+                    with shared_vars['pyramid_frames'][scale_i][0].get_lock():
+                            shared_vars['pyramid_frames'][scale_i][1][:] = frame
+                    completed.append(scale_i)
+                    self.parent_queue.put({'type':'pyramid_ack','pyramid_index':scale_i,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
+    
+    def serviceJobs(self):
+        while self.run_event.is_set():
+            job = self.job_queue.get()
+            
+            if job['type'] == 'pyramid':
+                self.servicePyramid(job)
+            
+            # {'type':'crop','loctions':(((x0,y0),(x1,y1)),),shape':(h,w),
+            # 'buffer_index':int,'pipe':connector}
+            elif job['type'] == 'crop':
+                pass
+            
+            elif job['type'] == 'kill': # The message to kill the thread
+                self.job_queue.put({'type':'kill'}) # Replaced used kill job
+                break
+                
+            else:
+                logging.error('Unknown job')
+    
+    def run(self):
+        logging.debug('Started')
+        self.serviceJobs()
+        logging.debug('Shutting Down')
