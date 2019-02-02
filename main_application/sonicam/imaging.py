@@ -310,7 +310,7 @@ class ImageProcessingWorker(mp.Process):
                     completed.append(scale_i)
                     self.parent_queue.put({'type':'pyramid_ack','pyramid_index':scale_i,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
     
-    def serviceJobs(self):
+    def spinServiceJobs(self):
         while self.run_event.is_set():
             job = self.job_queue.get()
             
@@ -331,5 +331,5 @@ class ImageProcessingWorker(mp.Process):
     
     def run(self):
         logging.debug('Started')
-        self.serviceJobs()
+        self.spinServiceJobs()
         logging.debug('Shutting Down')
