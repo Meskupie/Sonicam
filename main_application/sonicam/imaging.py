@@ -263,8 +263,10 @@ class CameraDriverWorker(mp.Process):
                 start = time.time()
                 ret,frame = self.cap.read()
                 if not ret: break # broken video capture object
-                #buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
-                buffer_index = self.newFrameToBuffer(frame)
+                if param_flip_video:
+                    buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
+                else:
+                    buffer_index = self.newFrameToBuffer(frame)
                 self.parent_queue.put({'type':'camera','index':buffer_index})
                 # Delay
                 if not param_use_cam:
