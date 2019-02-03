@@ -19,7 +19,7 @@ class FrameServer(mp.Process):
         self.src = src
         
         # Grab references to linking data
-        self.main_queue = queues['main']
+        self.master_queue = queues['master']
         self.face_detector_queue = queues['face_detector']
         self.job_queue = queues['frame_server']
         
@@ -123,7 +123,7 @@ class FrameServer(mp.Process):
                 elif job['type'] == 'camera':
                     self.updateBufferIndex(job['index'])
                     if self.is_rolling == False:
-                        self.main_queue.put({'type':'state','state':'rolling'})
+                        self.master_queue.put({'type':'state','state':'rolling'})
                     self.is_rolling = True # We have recieved at least one frame
                 elif job['type'] == 'error':
                     logging.error(job['message'])
@@ -207,10 +207,14 @@ class FrameServer(mp.Process):
     # This function is called when the main process is started 'self.start()'
     def run(self):
         logging.debug('Started')
-        self.initObjects()
-        self.startProcesses()
-        self.spinServiceJobs()
-        logging.debug('Shutting Down')
+        try:
+            self.initObjects()
+            self.startProcesses()
+            self.spinServiceJobs()
+        except:
+            self.killSelf()
+        finally:
+            logging.debug('Shutting Down')
 
     # External kill command
     def kill(self):
@@ -252,11 +256,11 @@ class CameraDriverWorker(mp.Process):
     def spinFrameCapture(self):
         while self.run_event.is_set():
             if not self.src == self.src_cam:
-                cap = cv2.VideoCapture(self.src)
-                hz = cap.get(cv2.CAP_PROP_FPS)
-            while self.run_event.is_set() and cap.isOpened():
+                self.cap = cv2.VideoCapture(self.src)
+                hz = self.cap.get(cv2.CAP_PROP_FPS)
+            while self.run_event.is_set() and self.cap.isOpened():
                 start = time.time()
-                ret,frame = cap.read()
+                ret,frame = self.cap.read()
                 if not ret: break # broken video capture object
                 buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
                 self.parent_queue.put({'type':'camera','index':buffer_index})
@@ -266,15 +270,23 @@ class CameraDriverWorker(mp.Process):
                 else:
                     # TODO: fix for when we have a real camera
                     pass
-            if cap.isOpened():
-                cap.release()
+            if self.cap.isOpened():
+                self.cap.release()
             else:
                 logging.debug('Restarting capture')
                 
+    def killSelf(self):
+        if self.cap.isOpened():
+            self.cap.release()
+    
     def run(self):
         logging.debug('Started')
-        self.spinFrameCapture()
-        logging.debug('Shutting Down')
+        try:
+            self.spinFrameCapture()
+        except:
+            self.killSelf()
+        finally:
+            logging.debug('Shutting Down')
 
 # ===================================
 #
@@ -328,8 +340,31 @@ class ImageProcessingWorker(mp.Process):
                 
             else:
                 logging.error('Unknown job')
+
+    def killSelf(self):
+        pass
     
     def run(self):
         logging.debug('Started')
-        self.spinServiceJobs()
-        logging.debug('Shutting Down')
+        try:
+            self.spinServiceJobs()
+        except:
+            self.killSelf()
+        finally:
+            logging.debug('Shutting Down')
+            
+def addDetectionToFrame(frame,detection):
+    scale = frame.shape[0]/param_frame_shape[0]
+    for result in detection:
+        bb = [int(round(x*scale)) for x in result['box']]
+        kp = result['keypoints']
+
+        cv2.rectangle(frame,(bb[0], bb[1]),(bb[0]+bb[2], bb[1] + bb[3]),(0,155,255),2)
+
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['left_eye']), 1, (0,0,255), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['right_eye']), 1, (0,0,255), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['nose']), 1, (0,0,255), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['mouth_left']), 1, (0,255,0), 2)
+        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['mouth_right']), 1, (0,255,0), 2)
+
+    return frame

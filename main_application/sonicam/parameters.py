@@ -1,6 +1,8 @@
 # List of parameters for use in Sonicam
 import tensorflow as tf
 
+param_src = '../data/sample_video.mp4'
+param_flask_queue_spin_rate = 200
 
 # Common
 param_use_gpu = 0

@@ -98,7 +98,7 @@ class FaceDetector(mp.Process):
         self.name = name
 
         # Grab references to linking data
-        self.main_queue = queues['main']
+        self.master_queue = queues['master']
         self.job_queue = queues['face_detector']
         self.frame_server_queue = queues['frame_server']
         global shared_vars
@@ -163,7 +163,7 @@ class FaceDetector(mp.Process):
                         if self.pyramid_count == len(param_pyramid_scalings):
                             results = self.detector.runSecondStage(shared_vars['buffer_frames'][job['buffer_index']][1])
                             self.internal_state = self.states['idle']
-                            self.main_queue.put({'type':'face_detector_results','results':results,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
+                            self.master_queue.put({'type':'face_detector_results','results':results,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
                             logging.debug('Detection Complete')
                     else:
                         logging.error('called '+str(job['type'])+' durring input')
@@ -171,12 +171,19 @@ class FaceDetector(mp.Process):
             except KeyError as e:
                 logging.error('Could not service video driver job with tag: '+str(e))
         
+    def killSelf(self):
+        pass
+    
     def run(self):
-        logging.debug('Starting')
-        self.initObjects()
-        self.createDetector()
-        self.spinDetector()
-        logging.debug('Shutting Down')
+        logging.debug('Started')
+        try:
+            self.initObjects()
+            self.createDetector()
+            self.spinDetector()
+        except:
+            self.killSelf()
+        finally:
+            logging.debug('Shutting Down')
         
     def kill(self):
         self.job_queue.put({'type':'kill'})
