@@ -231,7 +231,6 @@ class CameraDriverWorker(mp.Process):
         super(CameraDriverWorker, self).__init__()
         self.name = name
         self.src = src
-        self.src_cam = -1
         self.run_event = run_event
         self.parent_queue = parent_queue
         
@@ -256,17 +255,19 @@ class CameraDriverWorker(mp.Process):
     
     def spinFrameCapture(self):
         while self.run_event.is_set():
-            if not self.src == self.src_cam:
+            if True:
+                #self.cap = cv2.VideoCapture(get_tegra_pipeline(param_frame_shape[1], param_frame_shape[0], 30))
                 self.cap = cv2.VideoCapture(self.src)
                 hz = self.cap.get(cv2.CAP_PROP_FPS)
             while self.run_event.is_set() and self.cap.isOpened():
                 start = time.time()
                 ret,frame = self.cap.read()
                 if not ret: break # broken video capture object
-                buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
+                #buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
+                buffer_index = self.newFrameToBuffer(frame)
                 self.parent_queue.put({'type':'camera','index':buffer_index})
                 # Delay
-                if not self.src == self.src_cam:
+                if not param_use_cam:
                     time.sleep(max(0,(1/hz)-(time.time()-start)))
                 else:
                     # TODO: fix for when we have a real camera

@@ -1,8 +1,16 @@
 # List of parameters for use in Sonicam
 
 # Common
-param_src = '../data/sample_video.mp4'
-param_use_gpu = 0
+def get_tegra_pipeline(width, height, fps):
+    return "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(width) + ", height=(int)" + \
+        str(height) + ", format=(string)I420, framerate=(fraction)" + str(fps) + \
+        "/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+
+param_src_file = '../data/sample_video.mp4'
+param_src_cam = get_tegra_pipeline(1920, 1080, 30)
+param_use_cam = True
+param_src = param_src_cam if param_use_cam else param_src_file
+param_use_gpu = 1
 
 # FrameServer
 param_frame_shape = (1080,1920,3) # camera data shape
