@@ -40,7 +40,7 @@ class MasterQueue(mp.Process):
                     results = job['results']
                     time_now = time.time()
                     if time_last != 0:
-                        logging.error('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(results)))
+                        logging.info('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(results)))
                     time_last = time_now
                     
                     self.web_server_queue.put({'type':'full_frame','buffer_index':job['buffer_index'],'results':job['results']})
@@ -58,14 +58,13 @@ class MasterQueue(mp.Process):
         pass
     
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         try:
             self.spinServiceJobs()
         except:
             self.killSelf()
         finally:
-            logging.debug('Shutting Down')
-        
+            logging.info('Shutting Down Process')
     # External kill command
     def kill(self):
         self.job_queue.put({'type':'kill'})

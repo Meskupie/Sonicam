@@ -175,7 +175,7 @@ class FaceDetector(mp.Process):
         pass
     
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         try:
             self.initObjects()
             self.createDetector()
@@ -183,7 +183,7 @@ class FaceDetector(mp.Process):
         except:
             self.killSelf()
         finally:
-            logging.debug('Shutting Down')
+            logging.info('Shutting Down Process')
         
     def kill(self):
         self.job_queue.put({'type':'kill'})

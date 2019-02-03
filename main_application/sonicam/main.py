@@ -12,6 +12,10 @@ from kbhit import KBHit
 import threading as t
 import multiprocessing as mp
 from queue import Empty
+import eventlet as e
+
+from flask import Flask, render_template
+from flask_socketio import SocketIO
 
 # =============
 # Setup logging
@@ -19,11 +23,13 @@ from queue import Empty
 import logging
 from multiprocessing_logging import install_mp_handler
 
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(processName)s: [%(levelname)s] %(message)s',
                     #filename='log/sonicam.log',
                     #filemode='w'
                     )
+logging.getLogger('socketio').setLevel(logging.ERROR)
+logging.getLogger('engineio').setLevel(logging.ERROR)
 install_mp_handler()
 
 # =============
@@ -69,12 +75,6 @@ processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,sha
 processes.append(MasterQueue('MasterQueue',queue_dict))
 #processes.append()
 
-import eventlet as e
-#eventlet.monkey_patch()
-
-from flask import Flask, render_template
-from flask_socketio import SocketIO
-
 # =============
 # Setup Flask
 # =============
@@ -85,24 +85,6 @@ socket = SocketIO(app)#, logger=True, engineio_logger=True)
 @app.route('/')
 def index():
     return render_template('index.html')
-
-
-def sending(flag):
-    while flag.value == 1:
-        cap = cv2.VideoCapture('../data/sample_video.mp4')
-        while flag.value == 1 and cap.isOpened():
-            time_s = time.time()
-            ret,frame = cap.read()
-            if not ret: break
-            frame = cv2.resize(frame,(960,540))
-            frame = cv2.flip(frame, -1)
-            ret, frame_encoded = cv2.imencode('.jpg',frame)
-            frame_string = base64.b64encode(frame_encoded).decode('utf8')
-            socket.emit('image',frame_string)
-            hz = cap.get(cv2.CAP_PROP_FPS)
-            e.sleep(max(0,(1/hz)-(time.time()-time_s)))
-        #cap.close()
-    print('closing')
     
 def spinServiceJobs(flag,job_queue):
     while flag.value == 1:
@@ -112,7 +94,6 @@ def spinServiceJobs(flag,job_queue):
             e.sleep(1.0/param_flask_queue_spin_rate)
         else:
             if job['type'] == 'full_frame':
-                logging.warning('putting frame')
                 frame = addDetectionToFrame(shared_buffer_frames[job['buffer_index']][1],job['results'])
                 ret, frame_encoded = cv2.imencode('.jpg',frame)
                 
@@ -120,7 +101,6 @@ def spinServiceJobs(flag,job_queue):
                 
                 frame_string = base64.b64encode(frame_encoded).decode('utf8')
                 socket.emit('image',frame_string)
-
         
 def waitForInput(running_flag,threads):
     kb = KBHit()
@@ -148,7 +128,6 @@ if __name__ == '__main__':
     running_flag.value = 1
     
     threads = []
-    #threads.append(e.spawn(sending,running_flag))
     threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['web_server']))
     threads.append(e.spawn(waitForInput,running_flag,threads))
     
