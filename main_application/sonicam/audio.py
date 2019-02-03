@@ -3,18 +3,10 @@ import multiprocessing as mp
 import math
 import os
 import numpy as np
-import sounddevice as sd
-import acoular
 
-# from parameters import *
+from parameters import *
 
-param_fs = 44100
-param_blocksize = param_fs // 100
-param_c = 343 # m/s
-param_num_channels = 8
-param_output_ch = 2
-
-class Beamformer(mp.Process):
+class BeamformerHard(mp.Process):
     def get_beamformer():
         mic_angles = np.zeros(param_num_channels)
         angle_delta = 360 / param_num_channels
@@ -94,7 +86,7 @@ class Beamformer(mp.Process):
 
     def __init__(self,name,queues):
         super(Beamformer,self).__init__()
-        self.name = name
+        self.name = name+'Hard'
 
         # Grab references to linking data
         self.job_queue = queues['beamformer']
@@ -147,19 +139,75 @@ class Beamformer(mp.Process):
         pass
     
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         if self.initProcess():
             try:
                 self.spinServiceJobs()
             except Exception as e:
-                logging.error('Killed due to: ' + str(e))
+                logging.error('Killed due to ' + str(e))
                 self.killSelf()
             finally:
-                logging.debug('Shutting Down')
+                logging.info('Shutting Down Process')
         else:
-            logging.warn('Prematurely shutting down')
+            logging.warning('Audio hardware device not found')
         
     # External kill command
     def kill(self):
         self.job_queue.put({'type':'kill'})
         self.join()
+
+
+class BeamformerSoft(mp.Process):
+    def __init__(self,name,queues):
+        super(Beamformer,self).__init__()
+        self.name = name+'Soft'
+
+        # Grab references to linking data
+        self.job_queue = queues['beamformer']
+        
+        # Start the Process
+        self.start()
+            
+    def spinServiceJobs(self):
+        while True:
+            job = self.job_queue.get()
+            try:
+                if job['type'] == 'kill':
+                    self.killSelf()
+                    break
+                
+                elif job['type'] == 'angle':
+                    logging.info('Stearing to angle '+str(job['angle']))
+                
+                else:
+                    logging.error('Unknown job type')
+                    
+            except KeyError as e:
+                        logging.error('Could not service job with tag: '+str(e))
+      
+    
+    def killSelf(self):
+        pass
+    
+    def run(self):
+        logging.info('Starting Process')
+        try:
+            self.spinServiceJobs()
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
+            self.killSelf()
+        finally:
+            logging.info('Shutting Down Process')
+        
+    # External kill command
+    def kill(self):
+        self.job_queue.put({'type':'kill'})
+        self.join()
+
+try:
+    import sounddevice as sd
+    import acoular
+except:
+    Beamformer = BeamformerSoft
+else:
+    Beamformer = BeamformerHard

@@ -180,7 +180,8 @@ class FaceDetector(mp.Process):
             self.initObjects()
             self.createDetector()
             self.spinDetector()
-        except:
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
             self.killSelf()
         finally:
             logging.info('Shutting Down Process')

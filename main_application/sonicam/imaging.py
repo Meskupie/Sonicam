@@ -211,7 +211,8 @@ class FrameServer(mp.Process):
             self.initObjects()
             self.startProcesses()
             self.spinServiceJobs()
-        except:
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
             self.killSelf()
         finally:
             logging.info('Shutting Down Process')
@@ -283,7 +284,8 @@ class CameraDriverWorker(mp.Process):
         logging.info('Starting Process')
         try:
             self.spinFrameCapture()
-        except:
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
             self.killSelf()
         finally:
             logging.info('Shutting Down Process')
@@ -348,23 +350,8 @@ class ImageProcessingWorker(mp.Process):
         logging.info('Starting Process')
         try:
             self.spinServiceJobs()
-        except:
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
             self.killSelf()
         finally:
             logging.info('Shutting Down Process')
-            
-def addDetectionToFrame(frame,detection):
-    scale = frame.shape[0]/param_frame_shape[0]
-    for result in detection:
-        bb = [int(round(x*scale)) for x in result['box']]
-        kp = result['keypoints']
-
-        cv2.rectangle(frame,(bb[0], bb[1]),(bb[0]+bb[2], bb[1] + bb[3]),(0,155,255),2)
-
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['left_eye']), 1, (0,0,255), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['right_eye']), 1, (0,0,255), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['nose']), 1, (0,0,255), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['mouth_left']), 1, (0,255,0), 2)
-        cv2.circle(frame,tuple(int(round(x*scale)) for x in kp['mouth_right']), 1, (0,255,0), 2)
-
-    return frame

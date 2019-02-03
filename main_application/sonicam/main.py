@@ -37,9 +37,10 @@ install_mp_handler()
 # =============
 from parameters import *
 from imaging import FrameServer
-from imaging import addDetectionToFrame
+from graphics import addDetectionToFrame
 from measurement import FaceDetector
-from masterqueue import MasterQueue
+from state import MasterQueue
+from audio import Beamformer
 
 # =============
 # Set up a dictionary of queues to be used in message excange between processes
@@ -49,7 +50,7 @@ queue_dict['master'] = mp.Queue()
 queue_dict['frame_server'] = mp.Queue()
 queue_dict['face_detector'] = mp.Queue()
 queue_dict['web_server'] = mp.Queue()
-queue_dict['tracker'] = mp.Queue()
+queue_dict['beamformer'] = mp.Queue()
 
 # =============
 # Create all of the shared memory structures to pass data between processes
@@ -73,6 +74,7 @@ processes = []
 processes.append(FrameServer('FrameServer',param_src,queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames))
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
 processes.append(MasterQueue('MasterQueue',queue_dict))
+processes.append(Beamformer('Beamformer',queue_dict))
 #processes.append()
 
 # =============
