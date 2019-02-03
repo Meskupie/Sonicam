@@ -366,7 +366,6 @@ class Detector:
         if numbox>0:
             pick = self.nms(self.first_stage_boxes, 0.7, 'Union')
             total_boxes = self.first_stage_boxes[pick,:].copy()
-            self.first_stage_boxes = np.empty((0,9))
             regw = total_boxes[:,2]-total_boxes[:,0]
             regh = total_boxes[:,3]-total_boxes[:,1]
             qq1 = total_boxes[:,0]+total_boxes[:,5]*regw
@@ -377,6 +376,8 @@ class Detector:
             total_boxes = self.rerec(total_boxes.copy())
             total_boxes[:,0:4] = np.fix(total_boxes[:,0:4]).astype(np.int32)
             dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph = self.pad(total_boxes.copy(), w, h)
+        else:
+            total_boxes = self.first_stage_boxes.copy()
 
         numbox = total_boxes.shape[0]
 
