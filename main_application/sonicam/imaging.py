@@ -206,7 +206,7 @@ class FrameServer(mp.Process):
         
     # This function is called when the main process is started 'self.start()'
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         try:
             self.initObjects()
             self.startProcesses()
@@ -214,7 +214,7 @@ class FrameServer(mp.Process):
         except:
             self.killSelf()
         finally:
-            logging.debug('Shutting Down')
+            logging.info('Shutting Down Process')
 
     # External kill command
     def kill(self):
@@ -280,13 +280,13 @@ class CameraDriverWorker(mp.Process):
             self.cap.release()
     
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         try:
             self.spinFrameCapture()
         except:
             self.killSelf()
         finally:
-            logging.debug('Shutting Down')
+            logging.info('Shutting Down Process')
 
 # ===================================
 #
@@ -345,13 +345,13 @@ class ImageProcessingWorker(mp.Process):
         pass
     
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         try:
             self.spinServiceJobs()
         except:
             self.killSelf()
         finally:
-            logging.debug('Shutting Down')
+            logging.info('Shutting Down Process')
             
 def addDetectionToFrame(frame,detection):
     scale = frame.shape[0]/param_frame_shape[0]

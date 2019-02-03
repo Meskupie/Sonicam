@@ -13,7 +13,7 @@ shared_vars = {}
 # FrameServer
 param_frame_shape = (1080,1920,3) # camera data shape
 
-param_image_buffer_length = 20 # length of frame buffer
+param_image_buffer_length = 30 # length of frame buffer
 
 param_n_image_workers = 3
 
