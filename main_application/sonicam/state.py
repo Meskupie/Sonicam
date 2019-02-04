@@ -2,6 +2,7 @@ import cv2
 import time
 import logging
 import math
+import os
 import multiprocessing as mp
 
 from parameters import *
@@ -25,6 +26,7 @@ class MasterQueue(mp.Process):
         return 30.0*math.sin(time.time())
         
     def spinServiceJobs(self):
+        os.sched_setaffinity(0, {3, 4, 5})
         time_last = 0
         # =============
         # Main loop

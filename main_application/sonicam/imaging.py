@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 import time
+import os
 
 import multiprocessing as mp
 
@@ -52,6 +53,7 @@ class FrameServer(mp.Process):
     
     # Startup all processes and threads that run in the background
     def startProcesses(self):
+        os.sched_setaffinity(0,{1, 2, 3, 4, 5})
         # Create Workers
         self.image_processing_workers = []
         for i in range(param_n_image_workers):
@@ -254,6 +256,7 @@ class CameraDriverWorker(mp.Process):
         return buffer_index
     
     def spinFrameCapture(self):
+        os.sched_setaffinity(0, {1,2,3,4,5})
         while self.run_event.is_set():
             if True:
                 #self.cap = cv2.VideoCapture(get_tegra_pipeline(param_frame_shape[1], param_frame_shape[0], 30))
@@ -328,6 +331,7 @@ class ImageProcessingWorker(mp.Process):
                     self.parent_queue.put({'type':'pyramid_ack','pyramid_index':scale_i,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
     
     def spinServiceJobs(self):
+        os.sched_setaffinity(0, {1,2,3,4,5})
         while self.run_event.is_set():
             job = self.job_queue.get()
             

@@ -96,7 +96,7 @@ class BeamformerHard(mp.Process):
 
     def initProcess(self):
         sd._initialize()
-        os.sched_setaffinity(0,{1,2})
+        os.sched_setaffinity(0,{0})
         self.bf = Beamformer.get_beamformer()
         self.bfQueue = Beamformer.BFQueue(param_blocksize, self.bf, 0)
         self.input_dev = None
@@ -213,3 +213,5 @@ except:
     Beamformer = BeamformerSoft
 else:
     Beamformer = BeamformerHard
+
+Beamformer = BeamformerSoft

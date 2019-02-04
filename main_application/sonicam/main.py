@@ -5,6 +5,7 @@ import time
 import numpy as np
 import ctypes
 import base64
+import os
 import matplotlib.pyplot as plt
 import cv2
 from kbhit import KBHit
@@ -126,6 +127,7 @@ def killSystem(flag,threads,processes):
             process.kill()
 
 if __name__ == '__main__':
+    os.sched_setaffinity(0, {3,4,5})
     running_flag = mp.Value(ctypes.c_ubyte)
     running_flag.value = 1
     

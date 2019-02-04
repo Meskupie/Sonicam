@@ -1,6 +1,7 @@
 import time
 import math
 import logging
+import os
 import tensorflow as tf
 
 import multiprocessing as mp
@@ -132,6 +133,7 @@ class FaceDetector(mp.Process):
         self.frame_index = -1
     
     def createDetector(self):
+        os.sched_setaffinity(0, {1,2})
         # Set Model
         with tf.Graph().as_default():
             sess = tf.Session(config=param_tf_mtcnn_config)

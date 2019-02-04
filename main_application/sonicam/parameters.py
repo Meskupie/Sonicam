@@ -9,8 +9,11 @@ def get_tegra_pipeline(width, height, fps):
         str(height) + ", format=(string)I420, framerate=(fraction)" + str(fps) + \
         "/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
 
+def get_stream_pipeline():
+    return "udpsrc port=5000 ! application/x-rtp,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+
 if param_jetson:
-    param_use_cam = True
+    param_use_cam = False
     param_flip_video = False
     param_use_gpu = 1
 else:
@@ -19,7 +22,8 @@ else:
     param_use_gpu = 0
 
 param_src_file = '../data/sample_video.mp4'
-param_src_cam = get_tegra_pipeline(1920, 1080, 30)
+#param_src_cam = get_tegra_pipeline(1920, 1080, 30)
+param_src_cam = get_stream_pipeline()
 
 param_src = param_src_cam if param_use_cam else param_src_file
 

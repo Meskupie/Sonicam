@@ -1,16 +1,14 @@
 import cv2
+from parameters import *
 
-def get_tegra_pipeline(width, height, fps):
-    return "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(width) + ", height=(int)" + \
-           str(height) + ", format=(string)I420, framerate=(fraction)" + str(fps) + \
-           "/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
 
 if __name__ == "__main__":
     WIDTH = 1920
     HEIGHT = 1080
     FPS = 30
 
-    pipeline = get_tegra_pipeline(WIDTH, HEIGHT, FPS)
+    #pipeline = get_tegra_pipeline(WIDTH, HEIGHT, FPS)
+    pipeline = get_stream_pipeline()
     cap = cv2.VideoCapture(pipeline)
 
     while(True):
