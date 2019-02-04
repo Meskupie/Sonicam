@@ -1,3 +1,6 @@
+import os
+param_jetson = 'tegra' in os.uname()[1]
+
 # List of parameters for use in Sonicam
 
 # Common
@@ -6,9 +9,14 @@ def get_tegra_pipeline(width, height, fps):
         str(height) + ", format=(string)I420, framerate=(fraction)" + str(fps) + \
         "/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
 
-param_use_cam = False
-param_flip_video = True
-param_use_gpu = 0
+if param_jetson:
+    param_use_cam = True
+    param_flip_video = False
+    param_use_gpu = 1
+else:
+    param_use_cam = False
+    param_flip_video = True
+    param_use_gpu = 0
 
 param_src_file = '../data/sample_video.mp4'
 param_src_cam = get_tegra_pipeline(1920, 1080, 30)
@@ -23,7 +31,7 @@ param_image_buffer_end = 2
 param_frame_period = 0.0333
 
 # FaceDetector
-param_detector_thresholds = [0.6, 0.7, 0.7]
+param_detector_thresholds = [0.7, 0.8, 0.8]
 param_pyramid_scalings     = [3 ,5 ,8 ,15,25]
 param_pyramid_scaling_srcs = [-1,-1,-1, 1, 1]
 param_pyramid_shapes = [(int(round(param_frame_shape[0]/scale)),int(round(param_frame_shape[1]/scale)),param_frame_shape[2]) for scale in param_pyramid_scalings]

@@ -95,6 +95,7 @@ class BeamformerHard(mp.Process):
         self.start()
 
     def initProcess(self):
+        sd._initialize()
         os.sched_setaffinity(0,{1,2})
         self.bf = Beamformer.get_beamformer()
         self.bfQueue = Beamformer.BFQueue(param_blocksize, self.bf, 0)
@@ -104,14 +105,15 @@ class BeamformerHard(mp.Process):
                 self.input_dev = dev_idx
             if "default" in dev_dict['name']:
                 self.output_dev = dev_idx
+        #self.output_dev = 28
         if self.input_dev is None:
             logging.error("Could not find USBStreamer, not beamforming")
             return False
-        logging.info("%d is input_dev and %d is output_dev", self.input_dev, self.output_dev)
         return True
 
             
     def spinServiceJobs(self):
+        logging.info("%d is input_dev and %d is output_dev", self.input_dev, self.output_dev)
         with sd.Stream(device=(self.input_dev, self.output_dev),
             samplerate=param_fs, latency='low', channels=(param_num_channels, param_output_ch),
             callback=self.bfQueue.sd_callback, blocksize=param_blocksize):
@@ -126,7 +128,7 @@ class BeamformerHard(mp.Process):
                         break
                     
                     elif job['type'] == 'angle':
-                        self.bf.setAngle(job['angle'])
+                        self.bfQueue.setAngle(job['angle'])
                     
                     else:
                         logging.error('Unknown job type')
@@ -205,8 +207,8 @@ class BeamformerSoft(mp.Process):
         self.join()
 
 try:
-    import sounddevice as sd
     import acoular
+    import sounddevice as sd
 except:
     Beamformer = BeamformerSoft
 else:
