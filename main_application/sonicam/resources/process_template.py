@@ -40,13 +40,14 @@ class MasterQueue(mp.Process):
         pass
     
     def run(self):
-        logging.debug('Started')
+        logging.info('Starting Process')
         try:
             self.spinServiceJobs()
-        except:
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
             self.killSelf()
         finally:
-            logging.debug('Shutting Down')
+            logging.info('Shutting Down Process')
         
     # External kill command
     def kill(self):

@@ -1,7 +1,4 @@
 import cv2
-import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
 
 from parameters import *
 
@@ -21,23 +18,27 @@ def addDetectionToFrame(frame,detection):
 
     return frame
 
-class matplotlibDiplay():
-    def __init__(self,fig_,ax_):
-        self.fig = fig_
-        self.ax = ax_
-        self.colors = ['r','b','g','k','m']
-        self.shape = (1080,1920)
+# import matplotlib.pyplot as plt
+# from matplotlib.collections import PatchCollection
+# from matplotlib.patches import Rectangle
+
+# class matplotlibDiplay():
+#     def __init__(self,fig_,ax_):
+#         self.fig = fig_
+#         self.ax = ax_
+#         self.colors = ['r','b','g','k','m']
+#         self.shape = (1080,1920)
         
-    def clear(self):
-        self.ax.cla()
+#     def clear(self):
+#         self.ax.cla()
     
-    def draw(self):
-        self.ax.axis('equal')
-        self.ax.axis([0,self.shape[1],0,self.shape[0]])
-        self.fig.canvas.draw()
+#     def draw(self):
+#         self.ax.axis('equal')
+#         self.ax.axis([0,self.shape[1],0,self.shape[0]])
+#         self.fig.canvas.draw()
         
-    def addMeasurement(self,meas):
-        for m in meas:
-            p = Rectangle((m['box'][0],m['box'][1]),m['box'][2],m['box'][3], \
-                facecolor=self.colors[m['id']%len(self.colors)], alpha=0.5, edgecolor='None')
-            self.ax.add_patch(p)
+#     def addMeasurement(self,meas):
+#         for m in meas:
+#             p = Rectangle((m['box'][0],m['box'][1]),m['box'][2],m['box'][3], \
+#                 facecolor=self.colors[m['id']%len(self.colors)], alpha=0.5, edgecolor='None')
+#             self.ax.add_patch(p)

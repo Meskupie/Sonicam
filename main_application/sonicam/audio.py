@@ -177,7 +177,7 @@ class BeamformerSoft(mp.Process):
                     break
                 
                 elif job['type'] == 'angle':
-                    logging.info('Stearing to angle '+str(job['angle']))
+                    logging.debug('Stearing to angle '+str(job['angle']))
                 
                 else:
                     logging.error('Unknown job type')

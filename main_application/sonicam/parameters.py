@@ -1,20 +1,27 @@
 # List of parameters for use in Sonicam
 
 # Common
-param_src = '../data/sample_video.mp4'
 param_use_gpu = 0
+param_use_cam = False
+param_flip_video = True
+
+# Camera
+param_cam_fps = 30
+param_src_file = '../data/sample_video.mp4'
+param_src_cam = 'nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)1092, height=(int)1080, format=(string)I420, framerate=(fraction)'+str(param_cam_fps)+'/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
+param_src = param_src_cam if param_use_cam else param_src_file
 
 # FrameServer
 param_frame_shape = (1080,1920,3) # camera data shape
-param_image_buffer_length = 30 # length of frame buffer
+param_image_buffer_length = 20 # length of frame buffer
 param_n_image_workers = 3
 param_image_buffer_end = 2
 param_frame_period = 0.0333
 
 # FaceDetector
-param_detector_thresholds = [0.6, 0.7, 0.7]
-param_pyramid_scalings     = [3 ,5 ,8 ,15,25]
-param_pyramid_scaling_srcs = [-1,-1,-1, 1, 1]
+param_detector_thresholds = [0.6, 0.8, 0.8]
+param_pyramid_scalings     = [ 3, 5, 8,15]
+param_pyramid_scaling_srcs = [-1,-1,-1, 1]
 param_pyramid_shapes = [(int(round(param_frame_shape[0]/scale)),int(round(param_frame_shape[1]/scale)),param_frame_shape[2]) for scale in param_pyramid_scalings]
 import tensorflow as tf
 if param_use_gpu:

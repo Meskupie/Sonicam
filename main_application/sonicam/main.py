@@ -5,7 +5,6 @@ import time
 import numpy as np
 import ctypes
 import base64
-import matplotlib.pyplot as plt
 import cv2
 from kbhit import KBHit
 

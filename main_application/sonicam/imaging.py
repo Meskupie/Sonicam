@@ -61,7 +61,7 @@ class FrameServer(mp.Process):
             
         # Create Camera Driver
         name = 'CameraReader'
-        self.camera_driver_worker = CameraDriverWorker(name,self.src,self.run_event,self.job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'])
+        self.camera_driver_worker = ImageReadWorker(name,self.src,self.run_event,self.job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'])
     
     # Analyse the buffer index and the delta time between frames to verify that no frames were skipped
     # and that the current frame buffer is consistent.
@@ -225,10 +225,10 @@ class FrameServer(mp.Process):
 # ===================================
 #
 # ===================================
-class CameraDriverWorker(mp.Process):
+class ImageReadWorker(mp.Process):
     # Barebones initialization, pass shared data structures into the process and start it
     def __init__(self,name,src,run_event,parent_queue,buffer_frames,buffer_times,buffer_index):
-        super(CameraDriverWorker, self).__init__()
+        super(ImageReadWorker, self).__init__()
         self.name = name
         self.src = src
         self.src_cam = -1
@@ -275,6 +275,60 @@ class CameraDriverWorker(mp.Process):
                 self.cap.release()
             else:
                 logging.debug('Restarting capture')
+                
+    def killSelf(self):
+        if self.cap.isOpened():
+            self.cap.release()
+    
+    def run(self):
+        logging.info('Starting Process')
+        try:
+            self.spinFrameCapture()
+        except Exception as e:
+            logging.error('Killed due to ' + str(e))
+            self.killSelf()
+        finally:
+            logging.info('Shutting Down Process')
+            
+# ===================================
+#
+# ===================================
+class ImageWriteWorker(mp.Process):
+    # Barebones initialization, pass shared data structures into the process and start it
+    def __init__(self,name,file_name,run_event,job_queue,buffer_frames):
+        super(ImageWriteWorker, self).__init__()
+        self.name = name
+        self.file_name = file_name
+        self.run_event = run_event
+        self.job_queue = job_queue
+        
+        global shared_vars
+        shared_vars['buffer_frames'] = buffer_frames
+        
+        self.start()
+    
+    def newFrameToBuffer(self,frame):
+        # Update buffer with new frame
+        with shared_vars['buffer_index'].get_lock():
+            shared_vars['buffer_index'].value = (int(shared_vars['buffer_index'].value)+1) %param_image_buffer_length
+            buffer_index = int(shared_vars['buffer_index'].value)
+            with shared_vars['buffer_frames'][buffer_index][0].get_lock():
+                # Dump image data into buffer
+                shared_vars['buffer_frames'][buffer_index][1][:] = frame
+                with shared_vars['buffer_times'][0].get_lock():
+                    shared_vars['buffer_times'][1][buffer_index] = time.time()
+        return buffer_index
+    
+    def spinFrameWriting(self):
+        fourcc = cv2.VideoWriter_fourcc('.avi')
+        writer = cv2.VideoWriter(self.file_name, fourcc, param_cam_fps,(param_frame_shape[1],param_frame_shape[0]), True)
+
+        while self.run_event.is_set():
+            job = job_queue.get()
+            
+            if True:
+                writer.write(frame)
+        
                 
     def killSelf(self):
         if self.cap.isOpened():
