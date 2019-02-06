@@ -4,31 +4,28 @@ param_jetson = 'tegra' in os.uname()[1]
 # List of parameters for use in Sonicam
 
 # Common
-def get_tegra_pipeline(width, height, fps):
-    return "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(width) + ", height=(int)" + \
-        str(height) + ", format=(string)I420, framerate=(fraction)" + str(fps) + \
-        "/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
-
+param_cam_fps = 30
 if param_jetson:
     param_use_cam = True
     param_flip_video = False
     param_use_gpu = 1
 else:
     param_use_cam = False
-    param_flip_video = True
+    param_flip_video = False
     param_use_gpu = 0
-
-param_src_file = '../data/sample_video.mp4'
-param_src_cam = get_tegra_pipeline(1920, 1080, 30)
-
-param_src = param_src_cam if param_use_cam else param_src_file
 
 # FrameServer
 param_frame_shape = (1080,1920,3) # camera data shape
 param_image_buffer_length = 30 # length of frame buffer
 param_n_image_workers = 3
 param_image_buffer_end = 2
-param_frame_period = 0.0333
+param_frame_period = 1.0/param_cam_fps
+
+param_src_file = '../data/sample_video_hard.mp4'
+param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
+        str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \
+        "/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+param_src = param_src_cam if param_use_cam else param_src_file
 
 # FaceDetector
 param_detector_thresholds = [0.7, 0.8, 0.8]
