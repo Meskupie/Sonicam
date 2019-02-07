@@ -21,6 +21,7 @@ class FrameServer(mp.Process):
         # Grab references to linking data
         self.master_queue = queues['master']
         self.face_detector_queue = queues['face_detector']
+        self.tracker_queue = queues['tracker']
         self.job_queue = queues['frame_server']
         
         global shared_vars
@@ -72,8 +73,10 @@ class FrameServer(mp.Process):
             self.local_buffer_index = (self.local_buffer_index+1)%param_image_buffer_length
             if self.is_rolling:
                 # Check if the index increment is consistent and we didnt skip frames
-                if (index != self.local_buffer_index) or (shared_vars['buffer_index'].value != index):
-                    logging.error('Frame de-sync (index) in camera driver')
+                if (index != self.local_buffer_index):
+                    logging.error('[1] Frame de-sync (index) in camera driver')
+                elif (shared_vars['buffer_index'].value != index):
+                    logging.debug('Frame capture overran servicing indexs')
                 # Check the time delta between frames to make sure we are not dropping frames
                 with shared_vars['buffer_times'][0].get_lock():
                     dt = shared_vars['buffer_times'][1][self.local_buffer_index] - \
@@ -82,7 +85,7 @@ class FrameServer(mp.Process):
                         logging.debug('Long time between frames: '+str(dt))
     
     # Using the lookup_time, find the coresponding buffer index to provide. Lock this index if not already locked. If the coresponding time is farther back than what is available in the first n-m buffer indexs (leaving the last m indexs available for new frames)
-    def getBufferIndex(self,lookup_time):
+    def getBufferIndex(self,lookup_time,lock=True):
         with shared_vars['buffer_times'][0].get_lock():
             if lookup_time != None:
                 found_index = (np.abs(shared_vars['buffer_times'][1]-lookup_time)).argmin()
@@ -94,9 +97,10 @@ class FrameServer(mp.Process):
             else:
                 found_index = self.local_buffer_index
             # If this index isn't being used, grab a lock to the frame array
-            if self.buffer_index_locked[found_index] == 0:
-                shared_vars['buffer_frames'][found_index][0].acquire()
-                self.buffer_index_locked[found_index] = 1
+            if lock:
+                if self.buffer_index_locked[found_index] == 0:
+                    shared_vars['buffer_frames'][found_index][0].acquire()
+                    self.buffer_index_locked[found_index] = 1
             return found_index, shared_vars['buffer_times'][1][found_index]
     
     # Free the buffer index lock. Determine the length of time that the buffer index was held for to ensure that there is enough end frame buffer available to be filled while indexs are locked
@@ -120,11 +124,20 @@ class FrameServer(mp.Process):
                 if job['type'] == 'kill':
                     self.killSelf()
                     break
+                
                 elif job['type'] == 'camera':
+                    logging.debug('Servicing frame captured at index '+str(job['index']))
+                    
                     self.updateBufferIndex(job['index'])
                     if self.is_rolling == False:
                         self.master_queue.put({'type':'state','state':'rolling'})
                     self.is_rolling = True # We have recieved at least one frame
+                    
+                    logging.debug('Serviced frame captured at index '+str(job['index'])+' with current index '+str(shared_vars['buffer_index'].value))
+                    
+                    index, frame_time = self.getBufferIndex(None,lock=False)
+                    self.tracker_queue.put({'type':'pred_update','buffer_index':index,'frame_time':frame_time})
+                    
                 elif job['type'] == 'error':
                     logging.error(job['message'])
 
@@ -231,7 +244,6 @@ class ImageReadWorker(mp.Process):
         super(ImageReadWorker, self).__init__()
         self.name = name
         self.src = src
-        self.src_cam = -1
         self.run_event = run_event
         self.parent_queue = parent_queue
         
@@ -256,17 +268,22 @@ class ImageReadWorker(mp.Process):
     
     def spinFrameCapture(self):
         while self.run_event.is_set():
-            if not self.src == self.src_cam:
+            if True:
                 self.cap = cv2.VideoCapture(self.src)
                 hz = self.cap.get(cv2.CAP_PROP_FPS)
+                logging.debug('Frame rate check: '+str(hz))
             while self.run_event.is_set() and self.cap.isOpened():
                 start = time.time()
                 ret,frame = self.cap.read()
                 if not ret: break # broken video capture object
-                buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
+                if param_flip_video:
+                    buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
+                else:
+                    buffer_index = self.newFrameToBuffer(frame)
+                logging.debug('Reporting frame captured to index '+str(buffer_index))
                 self.parent_queue.put({'type':'camera','index':buffer_index})
                 # Delay
-                if not self.src == self.src_cam:
+                if not param_use_cam:
                     time.sleep(max(0,(1/hz)-(time.time()-start)))
                 else:
                     # TODO: fix for when we have a real camera

@@ -377,6 +377,8 @@ class Detector:
             total_boxes = self.rerec(total_boxes.copy())
             total_boxes[:,0:4] = np.fix(total_boxes[:,0:4]).astype(np.int32)
             dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph = self.pad(total_boxes.copy(), w, h)
+        else:
+            total_boxes = self.first_stage_boxes.copy()
 
         numbox = total_boxes.shape[0]
 

@@ -15,14 +15,13 @@ class MasterQueue(mp.Process):
         self.job_queue = queues['master']
         self.face_detector_queue = queues['face_detector']
         self.frame_server_queue = queues['frame_server']
+        self.tracker_queue = queues['tracker']
         self.web_server_queue = queues['web_server']
         self.beamformer_queue = queues['beamformer']
         
         # Start the Process
         self.start()
         
-    def getAngle(self,results):
-        return 30.0*math.sin(time.time())
         
     def spinServiceJobs(self):
         time_last = 0
@@ -45,15 +44,23 @@ class MasterQueue(mp.Process):
                     results = job['results']
                     time_now = time.time()
                     if time_last != 0:
+                        pass
                         logging.info('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(results)))
+                    else:
+                        logging.info('Detection Frequency: First Frame')
                     time_last = time_now
                     
-                    angle = self.getAngle(job['results'])
-                    
-                    self.web_server_queue.put({'type':'full_frame','buffer_index':job['buffer_index'],'results':job['results']})
-                    self.beamformer_queue.put({'type':'angle','angle':angle})
-                    
+                    if param_output_style == 'measure':
+                        self.web_server_queue.put({'type':'full_frame','buffer_index':job['buffer_index'],'results':job['results']})
+                        
+                    self.tracker_queue.put({'type':'mes_update','buffer_index':job['buffer_index'],'frame_time':job['frame_time'],'results':job['results']})
+                        
                     self.face_detector_queue.put({'type':'detect'})
+                    
+                elif job['type'] == 'estimation':
+                    if param_output_style == 'estimate':
+                        self.web_server_queue.put({'type':'estimation','estimation':job['estimation'],'buffer_index':job['buffer_index']})
+                    #logging.info(str(job['estimation']))
                 
                 else:
                     logging.error('Unknown job type')

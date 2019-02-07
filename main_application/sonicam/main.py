@@ -37,7 +37,7 @@ install_mp_handler()
 from parameters import *
 from imaging import FrameServer
 from graphics import addDetectionToFrame
-from measurement import FaceDetector
+from measurement import FaceDetector, Tracker
 from state import MasterQueue
 from audio import Beamformer
 
@@ -48,6 +48,7 @@ queue_dict = {}
 queue_dict['master'] = mp.Queue()
 queue_dict['frame_server'] = mp.Queue()
 queue_dict['face_detector'] = mp.Queue()
+queue_dict['tracker'] = mp.Queue()
 queue_dict['web_server'] = mp.Queue()
 queue_dict['beamformer'] = mp.Queue()
 
@@ -73,6 +74,7 @@ processes = []
 processes.append(FrameServer('FrameServer',param_src,queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames))
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
 processes.append(MasterQueue('MasterQueue',queue_dict))
+processes.append(Tracker('Tracker',queue_dict))
 processes.append(Beamformer('Beamformer',queue_dict))
 #processes.append()
 
@@ -86,7 +88,15 @@ socket = SocketIO(app)#, logger=True, engineio_logger=True)
 @app.route('/')
 def index():
     return render_template('index.html')
-    
+
+def getAngle(results):
+    return 30.0*math.sin(time.time())
+
+def encodeFrame(frame):
+    ret, frame_encoded = cv2.imencode('.jpg',frame)
+    frame_string = base64.b64encode(frame_encoded).decode('utf8')
+    return frame_string
+
 def spinServiceJobs(flag,job_queue):
     while flag.value == 1:
         try:
@@ -94,14 +104,27 @@ def spinServiceJobs(flag,job_queue):
         except Empty:
             e.sleep(1.0/param_flask_queue_spin_rate)
         else:
-            if job['type'] == 'full_frame':
+            if job['type'] == 'full_frame': # param_pyramid_scalings     = [ 2, 3, 5, 8,15,25]
                 frame = addDetectionToFrame(shared_buffer_frames[job['buffer_index']][1],job['results'])
-                ret, frame_encoded = cv2.imencode('.jpg',frame)
+                frame_string = encodeFrame(frame)
                 
                 queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
-                
-                frame_string = base64.b64encode(frame_encoded).decode('utf8')
                 socket.emit('image',frame_string)
+                
+                angle = getAngle(job['results'])
+                queue_dict['beamformer'].put({'type':'angle','angle':angle})
+            
+            elif job['type'] == 'estimation':
+                frame_raw = shared_buffer_frames[job['buffer_index']][1]
+                frame_raw = cv2.resize(frame_raw,param_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
+                frame = frame_raw#addEstimationToFrame(frame_raw,job['estimation'])
+                frame_string = encodeFrame(frame)
+                
+                socket.emit('image',frame_string)
+                
+                angle = getAngle(job['estimation'])
+                queue_dict['beamformer'].put({'type':'angle','angle':angle})
+                
         
 def waitForInput(running_flag,threads):
     kb = KBHit()
