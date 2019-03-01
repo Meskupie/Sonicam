@@ -1,13 +1,11 @@
 import React, { Component } from 'react';
 import Person from '../../components/POI/Person/Person';
-import classes from './ModifyingPerson.module.scss'
+import classes from './NewPerson.module.scss'
 
-class ModifyingPerson extends Component {
+class NewPerson extends Component {
     constructor(props) {
         super(props);
     }
-
-    //TODO: Remove hardcoded position values from here and .scss file
 
     render() {
         let pos = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -15,7 +13,7 @@ class ModifyingPerson extends Component {
         let posY = this.props.spacingY * (row - 1) + this.props.widthHeight * (row - 1) + this.props.offsetTop;
 
         let personContainerStyle = {
-            width: "1820px",
+            width: this.props.appWidth - this.props.offsetLeft*2,
             height: this.props.widthHeight + "px",
             top: posY + "px",
             left: this.props.offsetLeft + "px"
@@ -47,4 +45,4 @@ class ModifyingPerson extends Component {
     }
 }
 
-export default ModifyingPerson;
+export default NewPerson;

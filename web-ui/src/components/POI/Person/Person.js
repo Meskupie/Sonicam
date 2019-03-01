@@ -52,6 +52,7 @@ const person = (props) => {
                     widthHeight={props.imgWidthHeight}
                     imgSource={props.imgSource}
                     clicked={props.clicked}
+                    onMouseUp={props.onMouseUp}
                 />
             </div>
             <IndicatorText>

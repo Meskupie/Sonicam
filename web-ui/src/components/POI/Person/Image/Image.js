@@ -19,7 +19,7 @@ const person = (props) => {
     }
 
     return (
-        <img alt="POI Video Feed" src={props.imgSource} className={imageClass.join(' ')} onMouseDown={props.clicked} style={posStyle}/>
+        <img alt="POI Video Feed" src={props.imgSource} className={imageClass.join(' ')} onMouseDown={props.clicked} onMouseUp = {props.onMouseUp} style={posStyle}/>
     );
 }
 

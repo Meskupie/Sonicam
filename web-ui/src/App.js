@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import classes from './App.module.scss';
 import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
+import NewPerson from './containers/NewPerson/NewPerson';
 
 const APP_WIDTH = 800;
 const APP_HEIGHT = 480;
@@ -21,6 +22,10 @@ class App extends Component {
     this.state = {
       selectedPOI: 2,
       masterVolume: 1,
+      backgroundClicked: false,
+      backgroundHeld: false,
+      POIClicked: false,
+      POIHeld: false,
       POIs: [{
         id: 2,
         is_visible: null,
@@ -104,16 +109,65 @@ class App extends Component {
   POIClickedHandler = (event, selectedId) => {
     event.stopPropagation();
     this.setState({ selectedPOI: selectedId });
+    console.log("POI clicked")
+
+    this.setState({POIClicked: true});
+    this.setState({POIHeld: false });
+    setTimeout(() => {this.POIHeldHandler()}, 500);
   }
 
-  backgroundClickedHandler(event){
-    console.log('div clicked');
+  backgroundMouseDownHandler = (event) => {
+    console.log('background mouse down');
+    this.setState({backgroundClicked: true});
+    this.setState({backgroundHeld: false });
+    setTimeout(() => {this.backgroundHeldHandler()}, 500);
   }
+
+  backgroundMouseUpHandler = (event) => {
+    console.log('background released');
+    this.setState({backgroundClicked: false});
+    // this.setState({POIClicked: false});
+  }
+
+  backgroundHeldHandler(){
+    if(this.state.backgroundClicked === true){
+      console.log('background held');
+      this.setState({backgroundHeld: true });
+    }
+  }
+
+  POIMouseUpHandler = (event) => {
+    console.log('POI released');
+    this.setState({POIClicked: false});
+  }
+
+  POIHeldHandler(){
+    if(this.state.POIClicked === true){
+      console.log('POI held');
+      this.setState({POIHeld: true });
+    }
+  }
+
+  newPersonClickedHandler
 
   render() {
 
+    if(this.state.backgroundHeld===true){
+      var addPerson =
+        <NewPerson 
+          appWidth = {APP_WIDTH}
+          offsetTop = {SPACING_UI*2 + BUTTON_HEIGHT}
+          offsetLeft = {SPACING_UI}
+          spacingY = {SPACING_Y}
+          spacingX = {SPACING_X}
+          widthHeight = {WIDTH_HEIGHT}
+          imageWidthHeight = {IMAGE_WIDTH_HEIGHT}
+          //A list of new people needs to be passed in
+        />
+    }
+
     return (
-      <div className={classes.App} onMouseDown={this.backgroundClickedHandler.bind(this)} >
+      <div className={classes.App}>
         <Layout
           offsetTop={SPACING_UI}
           spacingUI={SPACING_UI}
@@ -135,15 +189,12 @@ class App extends Component {
           volumeWidth={VOLUME_WIDTH}
           state={this.state}
           POIClickedHandler={this.POIClickedHandler}
+          onBackgroundMouseDown={this.backgroundMouseDownHandler}
+          onBackgroundMouseUp={this.backgroundMouseUpHandler}
+          onPOIMouseUp={this.POIMouseUpHandler}
+          shouldRefresh={!this.state.backgroundHeld}
         />
-        {/* <ModifyingPerson 
-          offsetTop = {SPACING_UI*2 + BUTTON_HEIGHT}
-          offsetLeft = {SPACING_UI}
-          spacingY = {SPACING_Y}
-          spacingX = {SPACING_X}
-          widthHeight = {WIDTH_HEIGHT}
-          imageWidthHeight = {IMAGE_WIDTH_HEIGHT}
-        /> */}
+        {addPerson}
       </div>
     );
   }

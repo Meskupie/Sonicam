@@ -37,7 +37,7 @@ class People extends Component {
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
             let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1) + borderWidth * 2;
 
-            if (selected.position[0] === x && selected.position[1] === y) {
+            if (selected.position[0] === x && selected.position[1] === y && this.props.shouldRefresh === true) {
                 selectPosX = posX;
                 selectPosY = posY;
                 selectedIndicator =
@@ -51,12 +51,17 @@ class People extends Component {
 
             let image = " ";
 
-            if (this.state != null) {
+
+            if(this.props.shouldRefresh) {
+
+            }
+
+            if (this.state != null && this.props.shouldRefresh) {
                 image = "data:image/jpeg;charset=utf-8;base64," + this.state.parsedImage[POI.id];
             }
 
             return (
-                <Aux>
+                <Aux key={POI.id}>
                     <Person
                         key={POI.id}
                         posX={posX}
@@ -68,6 +73,7 @@ class People extends Component {
                         multiplierVolume={multiplierVolume}
                         volumeState={POI.soundStatus}
                         clicked={(event) => this.props.POIClickedHandler(event, POI.id)}
+                        onMouseUp={(event) => this.props.onPOIMouseUp(event)}
                         imgSource={image}
                     />
                     {selectedIndicator}
@@ -76,7 +82,7 @@ class People extends Component {
         });
 
         return (
-            <div className={[classes.PeopleContainer, classes.Scrollable].join(' ')} style={personsContainerStyle}>
+            <div className={[classes.PeopleContainer, classes.Scrollable].join(' ')} style={personsContainerStyle} onMouseDown={this.props.onBackgroundMouseDown} onMouseUp={this.props.onBackgroundMouseUp}>
                 {persons}
             </div>
         );

@@ -15,8 +15,13 @@ const personSelector = (props) => {
         borderWidth: props.borderWidth + "px",
     }
     
+    function handleClick(event) {
+        event.stopPropagation();
+        console.log("selector clicked");
+    }
+
     return (
-        <div className = {classes.Selector} style = {personSelectorStyle}/>
+        <div className = {classes.Selector} style = {personSelectorStyle} onClick={handleClick}/>
     );
 }
 
