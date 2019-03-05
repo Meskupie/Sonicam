@@ -1,0 +1,13 @@
+@import"../../../../assets/styles/globals";
+
+.Image{
+    position: absolute;
+    border-radius: 50%;
+    background-color: #32338B;
+}
+
+.Background{
+    position: absolute;
+    border-radius: 50%;
+    background-image: $gradient;
+}

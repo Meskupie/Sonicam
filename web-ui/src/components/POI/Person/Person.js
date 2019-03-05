@@ -3,7 +3,7 @@ import classes from './Person.module.css'
 import Image from './Image/Image'
 import Volume from './Volume/Volume'
 import Aux from '../../../hoc/Aux/Aux';
-import IndicatorText from './Text/Text';
+import Text from './Text/Text';
 
 const person = (props) => {
     let personClass = [];
@@ -22,6 +22,14 @@ const person = (props) => {
     if (props.volumeState != null) {
         volume = (
             <Aux>
+                <Volume
+                    widthHeight={props.widthHeight}
+                    volume={3}
+                    volumeWidth={props.volumeWidth}
+                    voulumeSpacing={props.voulumeSpacing}
+                    type={"background"}
+                    state={props.volumeState}
+                />
                 <Volume
                     widthHeight={props.widthHeight}
                     volume={props.normalizerVolume}
@@ -53,11 +61,15 @@ const person = (props) => {
                     imgSource={props.imgSource}
                     clicked={props.clicked}
                     onMouseUp={props.onMouseUp}
+                    isSelected={props.isSelected}
+                    isBackground={props.isBackground}
+                    borderWidth={props.borderWidth}
                 />
             </div>
-            <IndicatorText>
-
-            </IndicatorText>
+            <Text
+                isSelected={props.isSelected}
+                name={props.name}
+            />
         </div>
     );
 }

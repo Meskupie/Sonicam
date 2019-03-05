@@ -15,44 +15,53 @@ class People extends Component {
     }
 
     render() {
-        let selected = this.props.state.POIs.find(x => x.id === this.props.state.selectedPOI);
+        let selectedPOI = this.props.state.POIs.find(x => x.id === this.props.state.selectedPOI);
         let selectPosX = null;
         let selectPosY = null;
-        let borderWidth = (this.props.widthHeight - this.props.imageWidthHeight - this.props.volumeWidth * 2 -.5) / 2;
-        let selectedIndicator = null;
+        let selectedIndicator;
+        let isSelected = null;
+        let borderWidth = (this.props.widthHeight - this.props.imageWidthHeight - (this.props.volumeWidth * 2)) / 2 - 2;
 
         let personsContainerStyle = {
-            top: this.props.offsetTop - borderWidth*2,
-            height: this.props.widthHeight + this.props.widthHeight + borderWidth * 2 + this.props.spacingY + borderWidth * 2
+            top: this.props.offsetTop,
+            height: this.props.height
         }
 
         let persons = this.props.state.POIs.map(POI => {
             let x = POI.position[0];
             let y = POI.position[1];
+            let isBackground = null;
             selectedIndicator = null;
+            isSelected = false;
 
             let multiplierVolume = POI.volumeMultiplier * this.props.state.masterVolume;
             let normalizerVolume = POI.volumeNormaliser + multiplierVolume;
 
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
-            let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1) + borderWidth * 2;
+            let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1);
 
-            if (selected.position[0] === x && selected.position[1] === y && this.props.shouldRefresh === true) {
+            if(POI.id === "background"){
+                isBackground = true;
+            }
+
+            //if (selectedPOI.position[0] === x && selectedPOI.position[1] === y && this.props.shouldRefresh === true) {
+            if (selectedPOI.position[0] === x && selectedPOI.position[1] === y) {
+                isSelected = true;
                 selectPosX = posX;
                 selectPosY = posY;
                 selectedIndicator =
                     <PersonSelector
                         borderWidth={borderWidth}
-                        widthHeight={this.props.widthHeight + borderWidth * 2}
-                        posX={selectPosX - borderWidth * 2}
-                        posY={selectPosY - borderWidth * 2}
+                        widthHeight={this.props.imageWidthHeight}
+                        posX={selectPosX + ((this.props.widthHeight - this.props.imageWidthHeight) / 2)}
+                        posY={selectPosY + ((this.props.widthHeight - this.props.imageWidthHeight) / 2)}
                     />;
             }
 
             let image = " ";
 
 
-            if(this.props.shouldRefresh) {
+            if (this.props.shouldRefresh) {
 
             }
 
@@ -75,6 +84,10 @@ class People extends Component {
                         clicked={(event) => this.props.POIClickedHandler(event, POI.id)}
                         onMouseUp={(event) => this.props.onPOIMouseUp(event)}
                         imgSource={image}
+                        borderWidth={borderWidth}
+                        isBackground={isBackground}
+                        name={POI.name}
+                        isSelected={isSelected}
                     />
                     {selectedIndicator}
                 </Aux>

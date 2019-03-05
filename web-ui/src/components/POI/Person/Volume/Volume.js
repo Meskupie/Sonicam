@@ -24,8 +24,11 @@ const volume = (props) => {
     else if(props.type === "normalizer"){
         circleClass.push(classes.Normalizer);
     }
+    else if(props.type === "background"){
+        circleClass.push(classes.Background);
+    }
     else{
-        //Throw error
+        //throw error
     }
 
     switch(props.state){

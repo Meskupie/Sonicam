@@ -6,4 +6,6 @@
     position: absolute;
     border-style: solid;
     pointer-events: none;
+    box-sizing: border-box;
+    box-shadow: $large-shadow;
 }

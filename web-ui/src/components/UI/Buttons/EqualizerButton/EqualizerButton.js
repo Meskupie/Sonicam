@@ -14,7 +14,7 @@ const equalizerButton = (props) => {
 
     return (
         <div className={equalizerClass.join(' ')} style={equalizerButtonStyle}>
-            <svg className={classes.Icon} width={props.params.buttonSmallWidth * 65/80 + "px"} height={props.params.buttonHeight * 55/80 + "px"} viewBox="0 0 144 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+            <svg className={classes.Icon} width={props.params.buttonSmallWidth * 65/80 * 9/10 + "px"} height={props.params.buttonHeight * 55/80 * 9/10 + "px"} viewBox="0 0 144 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
                 <defs>
                     <linearGradient x1="50%" y1="100%" x2="50%" y2="-161.10244%" id="linearGradient-1">
                         <stop stopColor="#4BF48F" offset="0%"></stop>

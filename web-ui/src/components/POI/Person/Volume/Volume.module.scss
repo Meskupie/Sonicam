@@ -2,7 +2,8 @@
     position: absolute;
     top: 0px;
     left: 0px;
-    transform: rotate(180deg);
+    transform: rotate(225deg);
+    animation: progress 1s ease-in-out forwards;
   }
 
 .Multiplier {
@@ -31,12 +32,17 @@
         stroke: #C21A1A;
     }
 }
+
+.Background {
+    stroke: #32338B;
+    animation: none;
+}
   
 .Circle {
     fill: none;
     /*stroke-width: 2.8;*/
     stroke-linecap: round;
-    animation: progress 1s ease-in-out forwards;
+    animation: inherit;
 }
   
 @keyframes progress {

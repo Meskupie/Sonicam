@@ -6,10 +6,18 @@ import classes from './Text.module.scss';
 //modifying a current tracked face
 
 const indicatorText = (props) => {
-    
+    let textClass = [];
+    textClass.push(classes.Text);
+
+    if(props.isSelected === true){
+        textClass.push(classes.Selected);
+    }
+    else{
+        textClass.push(classes.Unselected);
+    }
     
     return (
-        <div className = {classes.Text}>
+        <div className = {textClass.join(' ')}>
             {props.name}
         </div>
     );
