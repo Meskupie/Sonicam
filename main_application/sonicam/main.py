@@ -117,7 +117,7 @@ def spinServiceJobs(flag,job_queue):
             elif job['type'] == 'estimation':
                 frame_raw = shared_buffer_frames[job['buffer_index']][1]
                 frame_raw = cv2.resize(frame_raw,param_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
-                frame = frame_raw#addEstimationToFrame(frame_raw,job['estimation'])
+                frame = frame_raw#addDetectionToFrame(frame_raw,job['results'])
                 frame_string = encodeFrame(frame)
                 
                 socket.emit('image',frame_string)

@@ -52,8 +52,8 @@ class MasterQueue(mp.Process):
                     
                     if param_output_style == 'measure':
                         self.web_server_queue.put({'type':'full_frame','buffer_index':job['buffer_index'],'results':job['results']})
-                        
-                    self.tracker_queue.put({'type':'mes_update','buffer_index':job['buffer_index'],'frame_time':job['frame_time'],'results':job['results']})
+                    else:
+                        self.tracker_queue.put({'type':'mes_update','buffer_index':job['buffer_index'],'frame_time':job['frame_time'],'results':job['results']})
                         
                     self.face_detector_queue.put({'type':'detect'})
                     
