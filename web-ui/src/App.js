@@ -5,15 +5,17 @@ import Layout from './containers/Layout/Layout';
 import NewPerson from './containers/NewPerson/NewPerson';
 
 const APP_WIDTH = 800;
-const APP_HEIGHT = 457;
+//Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
+//pixels with stetching instead of 480
+const APP_HEIGHT = 451;
 const WIDTH_HEIGHT = 134;
 const IMAGE_WIDTH_HEIGHT = 100;
 const VOLUME_WIDTH = 12;
-const SPACING_UI = 20;
+const SPACING_UI = 15;
 const BUTTON_HEIGHT = 70;
 const BUTTON_SMALL_WIDTH = 70;
 const BUTTON_LARGE_WIDTH = 215;
-const SPACING_Y = 45;
+const SPACING_Y = 43;
 const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
 var pressAndHold;
 
@@ -81,12 +83,12 @@ class App extends Component {
           is_visible: null,
           is_known: null,
           importance: 2,
-          name: "Name",
+          name: "LongName",
           mute: false,
           volumeMultiplier: .5 + Math.random() * .7,
           volumeNormaliser: Math.random() * .3,
           position: [4, 1],
-          soundStatus: "normal"
+          soundStatus: "lost"
         },
         {
           id: 5,
@@ -135,7 +137,7 @@ class App extends Component {
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: 0 });
     clearTimeout(pressAndHold);
-    pressAndHold = setTimeout(() => { this.POIHeldHandler(selectedId) }, 500);
+    pressAndHold = setTimeout(() => { this.POIHeldHandler(selectedId) }, 400);
   }
 
   backgroundMouseDownHandler = (event) => {
@@ -143,7 +145,7 @@ class App extends Component {
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: 0 });
     clearTimeout(pressAndHold);
-    pressAndHold = setTimeout(() => { this.backgroundHeldHandler() }, 500);
+    pressAndHold = setTimeout(() => { this.backgroundHeldHandler() }, 400);
   }
 
   backgroundMouseUpHandler = (event) => {
@@ -165,7 +167,9 @@ class App extends Component {
 
   POIHeldHandler(selectedId) {
     console.log('POI with id ' + selectedId + ' held');
-    this.setState({ POIHeld: selectedId });
+    if (selectedId !== "background") {
+      this.setState({ POIHeld: selectedId });
+    }
   }
 
   // onMouseOut can help with mouse leaving input area
@@ -174,7 +178,9 @@ class App extends Component {
     var appStyle = {
       width: APP_WIDTH + "px",
       height: APP_HEIGHT + "px",
-      transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ")"
+      //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
+      //and transform moves the UI to the corners of window after scaling
+      // transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
     }
 
     var addPerson = null;
@@ -238,6 +244,7 @@ class App extends Component {
           onBackgroundMouseUp={this.backgroundMouseUpHandler}
           onPOIMouseUp={this.POIMouseUpHandler}
           shouldRefresh={!(this.state.backgroundHeld || this.state.POIHeld)}
+          POIHeld={this.state.POIHeld}
         />
         {addPerson}
       </div>

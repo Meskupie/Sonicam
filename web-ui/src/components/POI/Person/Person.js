@@ -4,8 +4,11 @@ import Image from './Image/Image'
 import Volume from './Volume/Volume'
 import Aux from '../../../hoc/Aux/Aux';
 import Text from './Text/Text';
+import SoundStatus from './SoundStatus/SoundStatus'
 
 const person = (props) => {
+    let TextStatusContainerStyle = null;
+
     let personClass = [];
     personClass.push(classes.Person);
 
@@ -15,6 +18,12 @@ const person = (props) => {
         top: props.posY + 'px',
         height: props.widthHeight + 'px',
         width: props.widthHeight + 'px',
+    }
+
+    if(!props.shouldRefresh && !props.isHeld){
+        TextStatusContainerStyle={
+            opacity: "0"
+        }
     }
 
     let volume = null;
@@ -28,7 +37,7 @@ const person = (props) => {
                     volumeWidth={props.volumeWidth}
                     voulumeSpacing={props.voulumeSpacing}
                     type={"background"}
-                    state={props.volumeState}
+                    status={props.volumeState}
                 />
                 <Volume
                     widthHeight={props.widthHeight}
@@ -36,7 +45,7 @@ const person = (props) => {
                     volumeWidth={props.volumeWidth}
                     voulumeSpacing={props.voulumeSpacing}
                     type={"normalizer"}
-                    state={props.volumeState}
+                    status={props.volumeState}
                 />
                 <Volume
                     widthHeight={props.widthHeight}
@@ -44,7 +53,7 @@ const person = (props) => {
                     volumeWidth={props.volumeWidth}
                     voulumeSpacing={props.voulumeSpacing}
                     type={"multiplier"}
-                    state={props.volumeState}
+                    status={props.volumeState}
                 />
             </Aux>
             );
@@ -64,12 +73,21 @@ const person = (props) => {
                     isSelected={props.isSelected}
                     isBackground={props.isBackground}
                     borderWidth={props.borderWidth}
+                    shouldRefresh={props.shouldRefresh}
+                    isHeld={props.isHeld}
+                    status={props.volumeState}
                 />
             </div>
+            <div style={TextStatusContainerStyle} className={classes.TextStatusContainer}>
             <Text
                 isSelected={props.isSelected}
                 name={props.name}
+                isHeld={props.isHeld}
             />
+            <SoundStatus
+                status={props.volumeState}
+            />
+            </div>
         </div>
     );
 }

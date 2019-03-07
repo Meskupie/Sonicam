@@ -1,26 +1,33 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import classes from './Text.module.scss';
 
 //Where the face video/images will be displayed
 //either when tracked, when adding new faces or when
 //modifying a current tracked face
 
-const indicatorText = (props) => {
-    let textClass = [];
-    textClass.push(classes.Text);
+class Text extends PureComponent {
+    render() {
+        let name = this.props.name;
+        let textClass = [];
+        textClass.push(classes.Text);
 
-    if(props.isSelected === true){
-        textClass.push(classes.Selected);
+        if (this.props.isSelected) {
+            textClass.push(classes.Selected);
+        }
+        else {
+            textClass.push(classes.Unselected);
+        }
+
+        if (this.props.isHeld) {
+            name = "Remove - " + this.props.name;
+        }
+
+        return (
+            <div className={textClass.join(' ')}>
+                {name}
+            </div>
+        );
     }
-    else{
-        textClass.push(classes.Unselected);
-    }
-    
-    return (
-        <div className = {textClass.join(' ')}>
-            {props.name}
-        </div>
-    );
 }
 
-export default indicatorText;
+export default Text;

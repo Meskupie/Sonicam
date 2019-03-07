@@ -6,22 +6,48 @@ import Aux from '../../../../hoc/Aux/Aux';
 //either when tracked, when adding new faces or when
 //modifying a current tracked face
 
-const person = (props) => {
+const image = (props) => {
+    let imageClass = [classes.Image]
+    
     var posStyle = {
         left: props.posXY + 'px',
         top: props.posXY + 'px',
         width: props.widthHeight + 'px',
-        height: props.widthHeight + 'px',
+        height: props.widthHeight + 'px'
+    }
+
+    var deleteIconStyle = {
+        width: props.widthHeight/2.5 + 'px',
+        height: props.widthHeight/2.5 + 'px'
     }
 
     let image = null
+    let imageStyle = null
+    let deleteIcon = null
 
-    if (props.isBackground === true) {
+    if(props.status === "lost"){
+        imageClass.push(classes.Lost);
+    }
+
+    if (props.shouldRefresh === false) {
+        imageClass.push(classes.Blur);
+    }
+
+    if (props.isHeld){
+        deleteIcon =
+            <svg style={deleteIconStyle} className={classes.DeleteIcon} width="17px" height="17px" viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+                <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd" strokeLinecap="round" strokeLinejoin="round">
+                    <g id="Delete-Symbol" stroke="#4E4FBF" strokeWidth="2.5">
+                        <g id="Group" transform="translate(2.000000, 2.000000)">
+                            <path d="M6.5,6.5 L0,-3.9801021e-16 L6.5,6.5 L13,-7.96020419e-16 L6.5,6.5 Z M6.5,6.5 L0,13 L6.5,6.5 L13,13 L6.5,6.5 Z" id="Combined-Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </svg>
+    }
+
+    if (props.isBackground) {
         var backgroundStyle = {
-            left: props.posXY + 'px',
-            top: props.posXY + 'px',
-            width: props.widthHeight - props.borderWidth * 2 + 'px',
-            height: props.widthHeight - props.borderWidth * 2 + 'px',
             padding: props.borderWidth + 'px'
         }
 
@@ -45,14 +71,15 @@ const person = (props) => {
             </svg>
     }
     else {
-        image = <img alt="POI Video Feed" src={props.imgSource} className={classes.Image} style={posStyle} />
+        image = <img style={imageStyle} alt=" " src={props.imgSource} className={imageClass.join(' ')} />
     }
 
     return (
-        <div onMouseDown={props.clicked} onMouseUp={props.onMouseUp}>
+        <div style={posStyle} className={classes.Parent} onMouseDown={props.clicked} onMouseUp={props.onMouseUp}>
+            {deleteIcon}
             {image}
         </div>
     );
 }
 
-export default person;
+export default image;

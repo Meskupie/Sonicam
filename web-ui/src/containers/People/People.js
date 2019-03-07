@@ -10,6 +10,7 @@ class People extends Component {
         super(props);
         getVideoFeed((err, image) => {
             let parsedImage = JSON.parse(image);
+            //This needs to change.  Setting state in constructor can lead to bad behaviour
             this.setState({ parsedImage });
         });
     }
@@ -60,12 +61,7 @@ class People extends Component {
 
             let image = " ";
 
-
-            if (this.props.shouldRefresh) {
-
-            }
-
-            if (this.state != null && this.props.shouldRefresh) {
+            if (this.state != null) {
                 image = "data:image/jpeg;charset=utf-8;base64," + this.state.parsedImage[POI.id];
             }
 
@@ -88,6 +84,8 @@ class People extends Component {
                         isBackground={isBackground}
                         name={POI.name}
                         isSelected={isSelected}
+                        shouldRefresh={this.props.shouldRefresh}
+                        isHeld={POI.id === this.props.POIHeld}
                     />
                     {selectedIndicator}
                 </Aux>
