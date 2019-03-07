@@ -19,10 +19,9 @@ class FrameServer(mp.Process):
         self.src = src
         
         # Grab references to linking data
+        self.job_queue = queues['frame_server']
         self.master_queue = queues['master']
         self.face_detector_queue = queues['face_detector']
-        self.tracker_queue = queues['tracker']
-        self.job_queue = queues['frame_server']
         
         global shared_vars
         shared_vars['buffer_frames'] = buffer_frames
@@ -126,82 +125,70 @@ class FrameServer(mp.Process):
                     break
                 
                 elif job['type'] == 'camera':
-                    logging.debug('Servicing frame captured at index '+str(job['index']))
-                    
-                    self.updateBufferIndex(job['index'])
-                    if self.is_rolling == False:
-                        self.master_queue.put({'type':'state','state':'rolling'})
-                    self.is_rolling = True # We have recieved at least one frame
-                    
-                    logging.debug('Serviced frame captured at index '+str(job['index'])+' with current index '+str(shared_vars['buffer_index'].value))
-                    
+                    self.updateBufferIndex
                     index, frame_time = self.getBufferIndex(None,lock=False)
-                    self.tracker_queue.put({'type':'pred_update','buffer_index':index,'frame_time':frame_time})
+                    logging.debug('Serviced frame captured at index '+str(job['index'])+' with current index '+str(shared_vars['buffer_index'].value))
+                    self.master_queue.put({'type':'new_frame','buffer_index':index,'frame_time':frame_time})
+                    
+                elif job['type'] == 'lock_frame':
+                    try: time = job['time']
+                    except KeyError: time = None
+                    self.getBufferIndex(time)
+                    
+                elif job['type'] == 'unlock_frame':
+                    self.freeBufferIndex(job['buffer_index'])
+                
+                elif job['type'] == 'pyramid':
+                    try: time = job['time']
+                    except KeyError: time = None
+                    index, frame_time = self.getBufferIndex(time)
+                    if index == -1:
+                        logging.error('Overran buffer, not enough history')
+                    else:
+                        for patterns in job['patterns']:
+                            self.image_job_queue.put({'type':'pyramid','patterns':patterns,'buffer_index':index,'frame_time':frame_time})
+                
+                elif job['type'] == 'pyramid_ack':
+                    self.face_detector_queue.put({'type':'pyramid_data','pyramid_index':job['pyramid_index'],'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
                     
                 elif job['type'] == 'error':
                     logging.error(job['message'])
-
-                # Service jobs after we are rolling, else put jobs back
-                elif self.is_rolling:
-                    if job['type'] == 'lock_frame':
-                        try: time = job['time']
-                        except KeyError: time = None
-                        self.getBufferIndex(time)
-                        
-                    elif job['type'] == 'unlock_frame':
-                        self.freeBufferIndex(job['buffer_index'])
-                    
-                    elif job['type'] == 'pyramid':
-                        try: time = job['time']
-                        except KeyError: time = None
-                        index, frame_time = self.getBufferIndex(time)
-                        if index == -1:
-                            logging.error('Overran buffer, not enough history')
-                        else:
-                            for patterns in job['patterns']:
-                                self.image_job_queue.put({'type':'pyramid','patterns':patterns,'buffer_index':index,'frame_time':frame_time})
-                    
-                    elif job['type'] == 'pyramid_ack':
-                        self.face_detector_queue.put({'type':'pyramid_data','pyramid_index':job['pyramid_index'],'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
-                    
-                    # {'type':'scale','shapes':((h,w),),'time':(None/time.time()),'pipe':connector}
-                    # if job['type'] == 'scale':
-                    #     # try / except in case there is no 'time' key
-                    #     try: time = job['time']
-                    #     except KeyError: time = None
-                    #     index = self.getBufferIndex(time,len(job['shapes']))
-                    #     if index == -1:
-                    #         job['pipe'].send({'type':'error','message':'Not enough history in the buffer'})
-                    #     else:
-                    #         for shape in job['shapes']:
-                    #             image_job = {'type':'scale','shape':shape,'buffer_index':index, \
-                    #                 'pipe':job['pipe']}
-                    #             self.image_job_queue.put(image_job)
-                    
-                    #{'type':'crop','loctions':(((x0,y0),(x1,y1)),),'shape':(h,w), \
-                    #'time':(None/time.time()),'pipe':connector}
-                    elif job['type'] == 'crop':
-                        # try / except in case there is no 'time' key
-                        try: time = job['time']
-                        except KeyError: time = None
-                        index = self.getBufferIndex(time,len(job['locations']))
-                        if index == -1:
-                            job['pipe'].send({'type':'error','message':'Not enough history in the buffer'})
-                        else:
-                            for location in job['locations']:
-                                image_job = {'type':'crop','location':location,'shape':job['shape'], \
-                                    'buffer_index':index,'pipe':job['pipe']}
-                                self.image_job_queue.put(image_job)
-                    
-                    elif job['type'] == 'acknowledge':
-                        if job['location'] == 'processing':
-                            self.freeBufferIndex(job['index'])
-                    
-                    else:
-                        logging.error('Unknown job type')
+                # {'type':'scale','shapes':((h,w),),'time':(None/time.time()),'pipe':connector}
+                # if job['type'] == 'scale':
+                #     # try / except in case there is no 'time' key
+                #     try: time = job['time']
+                #     except KeyError: time = None
+                #     index = self.getBufferIndex(time,len(job['shapes']))
+                #     if index == -1:
+                #         job['pipe'].send({'type':'error','message':'Not enough history in the buffer'})
+                #     else:
+                #         for shape in job['shapes']:
+                #             image_job = {'type':'scale','shape':shape,'buffer_index':index, \
+                #                 'pipe':job['pipe']}
+                #             self.image_job_queue.put(image_job)
+                
+                #{'type':'crop','loctions':(((x0,y0),(x1,y1)),),'shape':(h,w), \
+                #'time':(None/time.time()),'pipe':connector}
+                # elif job['type'] == 'crop':
+                #     # try / except in case there is no 'time' key
+                #     try: time = job['time']
+                #     except KeyError: time = None
+                #     index = self.getBufferIndex(time,len(job['locations']))
+                #     if index == -1:
+                #         job['pipe'].send({'type':'error','message':'Not enough history in the buffer'})
+                #     else:
+                #         for location in job['locations']:
+                #             image_job = {'type':'crop','location':location,'shape':job['shape'], \
+                #                 'buffer_index':index,'pipe':job['pipe']}
+                #             self.image_job_queue.put(image_job)
+                
+                # elif job['type'] == 'acknowledge':
+                #     if job['location'] == 'processing':
+                #         self.freeBufferIndex(job['index'])
+                
                 else:
-                    # Put the job back in the queue untill we start rolling frames
-                    self.job_queue.put(job)
+                    logging.error('Unknown job type')
+
             except KeyError as e:
                 logging.error('Could not service job with tag: '+str(e))
     

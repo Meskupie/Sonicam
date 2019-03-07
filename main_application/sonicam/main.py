@@ -38,7 +38,6 @@ from parameters import *
 from imaging import FrameServer
 from graphics import addDetectionToFrame
 from measurement import FaceDetector, Tracker
-from state import MasterQueue
 from audio import Beamformer
 
 # =============
@@ -48,8 +47,6 @@ queue_dict = {}
 queue_dict['master'] = mp.Queue()
 queue_dict['frame_server'] = mp.Queue()
 queue_dict['face_detector'] = mp.Queue()
-queue_dict['tracker'] = mp.Queue()
-queue_dict['web_server'] = mp.Queue()
 queue_dict['beamformer'] = mp.Queue()
 
 # =============
@@ -73,21 +70,13 @@ shared_pyramid_frames = [(raw_pyramid_arrays[i],np.frombuffer(raw_pyramid_arrays
 processes = []
 processes.append(FrameServer('FrameServer',param_src,queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames))
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
-processes.append(MasterQueue('MasterQueue',queue_dict))
-processes.append(Tracker('Tracker',queue_dict))
 processes.append(Beamformer('Beamformer',queue_dict))
-#processes.append()
 
 # =============
-# Setup Flask
+# Main application logic
 # =============
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socket = SocketIO(app)#, logger=True, engineio_logger=True)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+tracker = Tracker()
 
 def getAngle(results):
     return 30.0*math.sin(time.time())
@@ -98,34 +87,76 @@ def encodeFrame(frame):
     return frame_string
 
 def spinServiceJobs(flag,job_queue):
+    time_last = 0
+    running_chain = False
     while flag.value == 1:
         try:
             job = job_queue.get_nowait()
         except Empty:
             e.sleep(1.0/param_flask_queue_spin_rate)
         else:
-            if job['type'] == 'full_frame': # param_pyramid_scalings     = [ 2, 3, 5, 8,15,25]
-                frame = addDetectionToFrame(shared_buffer_frames[job['buffer_index']][1],job['results'])
-                frame_string = encodeFrame(frame)
-                
-                queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
-                socket.emit('image',frame_string)
-                
-                angle = getAngle(job['results'])
-                queue_dict['beamformer'].put({'type':'angle','angle':angle})
-            
-            elif job['type'] == 'estimation':
-                frame_raw = shared_buffer_frames[job['buffer_index']][1]
-                frame_raw = cv2.resize(frame_raw,param_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
-                frame = frame_raw#addDetectionToFrame(frame_raw,job['results'])
-                frame_string = encodeFrame(frame)
-                
-                socket.emit('image',frame_string)
-                
-                angle = getAngle(job['estimation'])
-                queue_dict['beamformer'].put({'type':'angle','angle':angle})
-                
-        
+            try:
+                if job['type'] == 'new_frame':
+                    if running_chain == False:
+                        running_chain = True
+                        logging.info('Starting chain')
+                        #queue_dict['face_detector'].put({'type':'detect'})
+                        
+                    #tracker.predictionUpdate(job['frame_time'])
+                    #estimation = tracker.getEstimation()
+                    
+                    if param_output_style == 'full':
+                        emitFullFrame(shared_buffer_frames[job['buffer_index']][1])
+                        
+                        #angle = getAngle(estimation)
+                        #queue_dict['beamformer'].put({'type':'angle','angle':angle})
+                    
+                    elif param_output_style == 'thumbnails':
+                        pass
+                    
+                    elif param_output_style == 'detections':
+                        pass
+                    
+                elif job['type'] == 'face_results':
+                    # Record the frame rate
+                    time_now = time.time()
+                    if time_last != 0:
+                        logging.info('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(job['results'])))
+                    else:
+                        logging.info('Detection Frequency: First Frame')
+                    time_last = time_now
+                    
+                    # Run measurement update on face results
+                    #tracker.measurementUpdate(job['frame_time'],job['results'])
+
+                    # Run next detection
+                    queue_dict['face_detector'].put({'type':'detect'})
+                    
+                    if param_output_style == 'detections':
+                        emitFullFrame(shared_buffer_frames[job['buffer_index']][1],job['results'])
+                        queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
+                        
+                        # Update beamformer
+                        #angle = getAngle(job['results'])
+                        #queue_dict['beamformer'].put({'type':'angle','angle':angle})
+                        
+                else:
+                    logging.error('Unknown job type')
+                    
+            except KeyError as exception:
+                        logging.error('Could not service video driver job with tag: '+str(exception))
+                        
+def emitFullFrame(frame_raw,detection=[]): #detection=job['results']
+    logging.info(len(detection))
+    frame_scaled = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
+    if detection == None:
+        frame = frame_scaled
+    else:
+        frame = addDetectionToFrame(frame_scaled,detection)
+    frame_string = encodeFrame(frame)
+    socket.emit('image',frame_string)
+
+
 def waitForInput(running_flag,threads):
     kb = KBHit()
     while True:
@@ -142,17 +173,30 @@ def killSystem(flag,threads,processes):
     if flag.value == 1:
         logging.warning('System terminating')
         flag.value = 0
+        logging.warning('Killing threads')
         for thread in threads:
             thread.kill()
         for process in processes:
+            logging.warning('Killing Process: '+process.name)
             process.kill()
+
+# =============
+# Setup Flask
+# =============
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socket = SocketIO(app)#, logger=True, engineio_logger=True)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     running_flag = mp.Value(ctypes.c_ubyte)
     running_flag.value = 1
     
     threads = []
-    threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['web_server']))
+    threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['master']))
     threads.append(e.spawn(waitForInput,running_flag,threads))
     
     try:

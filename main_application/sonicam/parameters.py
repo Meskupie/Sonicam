@@ -72,7 +72,7 @@ param_max_uncertainty = 10
 param_dist_func = 'norm' #'norm'={euclidian distance},
 
 param_face_diameter = 0.16 # Meters (~6 inch)
-param_tracker_buffer_length = 200
+param_tracker_buffer_length = 20
 param_aov_x = math.radians(90)
 param_aov_y = math.radians(50)
 param_aov_d = math.radians(102)
@@ -81,8 +81,9 @@ param_fov_l_y = (param_frame_shape[0]/(2*math.tan(param_aov_y/2)))
 param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 
 # Webserver
-param_output_style = 'estimate' # 'measure', 'estimate'
-param_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
+param_output_style = 'full'#'detections' #'full' #'thumbnails'
+param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
+param_thumbnail_output_shape = ((100,100))
 param_flask_queue_spin_rate = 200
 
 # Shared
