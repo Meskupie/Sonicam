@@ -48,11 +48,12 @@ class FaceDetector(mp.Process):
     
     
     def initObjects(self):
-        self.states = {'idle':0,'input':1}
+        self.states = {'idle':0,'input':1,'initialization':-1}
         self.internal_state = self.states['idle']
         self.pyramid_scale_jobs = self.createScaleList()
         self.pyramid_count = 0
         self.frame_index = -1
+        self.initial_detection = True
     
     def createDetector(self):
         # Set Model
@@ -70,7 +71,7 @@ class FaceDetector(mp.Process):
                 
                 if self.internal_state == self.states['idle']:
                     if job['type'] == 'detect':
-                        logging.debug('Starting Detection')
+                        logging.info('Starting Detection')
                         self.detector.reset()
                         self.internal_state = self.states['input']
                         self.detector.reset()
@@ -81,12 +82,21 @@ class FaceDetector(mp.Process):
                 
                 elif self.internal_state == self.states['input']:
                     if job['type'] == 'pyramid_data':
+                        # For the first frame, drop the lock and ignore the coresponding frame (initalization time)
+                        if self.initial_detection and self.pyramid_count == 0:
+                            self.frame_server_queue.put({'type':'unlock_frame','buffer_index':job['buffer_index']})
                         self.detector.runFirstStage(shared_vars['pyramid_frames'][job['pyramid_index']][1])
                         self.pyramid_count += 1
                         if self.pyramid_count == len(param_pyramid_scalings):
                             results = self.detector.runSecondStage(shared_vars['buffer_frames'][job['buffer_index']][1])
                             self.internal_state = self.states['idle']
-                            self.master_queue.put({'type':'face_results','results':results,'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
+                            # Signal that this frame should be ignored
+                            if self.initial_detection:
+                                buffer_index = None
+                                self.initial_detection = False
+                            else:
+                                buffer_index = job['buffer_index']
+                            self.master_queue.put({'type':'face_results','results':results,'buffer_index':buffer_index,'frame_time':job['frame_time']})
                             logging.debug('Detection Complete')
                     else:
                         logging.error('called '+str(job['type'])+' durring input')
@@ -209,6 +219,22 @@ class Tracker():
             measure.append(np.array([px_c,py_c,state_d]))
             measure_transformed.append(np.array([state_x,state_y,state_d]))
         return measure, measure_transformed
+    
+    def calculateBoundingBox(state):
+        px_c = state[0]*param_fov_l/state[2]
+        py_c = state[1]*param_fov_l/state[2]
+        pw = param_fov_l*param_face_diameter/state[2]
+        
+        bb = np.zeros(4)
+        bb[0] = int(round(px_c-(pw*param_thumbnail_zoom/2))+(param_frame_shape[1]/2))
+        bb[1] = int(round(py_c-(pw*param_thumbnail_zoom/2))+(param_frame_shape[0]/2))
+        bb[2] = pw*param_thumbnail_zoom
+        bb[3] = pw*param_thumbnail_zoom
+        print('start')
+        print(state)
+        print(bb)
+        print('finish')
+        return bb
 
 
 class EKF():

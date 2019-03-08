@@ -1,6 +1,7 @@
 import os
 import math
 import tensorflow as tf
+import numpy as np
 
 param_jetson = 'tegra' in os.uname()[1]
 
@@ -81,10 +82,14 @@ param_fov_l_y = (param_frame_shape[0]/(2*math.tan(param_aov_y/2)))
 param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 
 # Webserver
-param_output_style = 'full'#'detections' #'full' #'thumbnails'
+param_output_style = 'thumbnail_detections' #'detections' #'full' #'thumbnails'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
-param_thumbnail_output_shape = ((100,100))
-param_flask_queue_spin_rate = 200
+param_flask_queue_spin_rate = 1000
+
+param_thumbnail_count = 10
+param_thumbnail_shape = (115,115,3)
+param_thumbnail_zoom = 3
+param_thumbnail_background = [139,51,50] #32338B, rgb: 50,51,139
 
 # Shared
 shared_vars = {}

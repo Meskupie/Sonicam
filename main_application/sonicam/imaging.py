@@ -125,7 +125,7 @@ class FrameServer(mp.Process):
                     break
                 
                 elif job['type'] == 'camera':
-                    self.updateBufferIndex
+                    self.updateBufferIndex(job['index'])
                     index, frame_time = self.getBufferIndex(None,lock=False)
                     logging.debug('Serviced frame captured at index '+str(job['index'])+' with current index '+str(shared_vars['buffer_index'].value))
                     self.master_queue.put({'type':'new_frame','buffer_index':index,'frame_time':frame_time})
@@ -137,11 +137,13 @@ class FrameServer(mp.Process):
                     
                 elif job['type'] == 'unlock_frame':
                     self.freeBufferIndex(job['buffer_index'])
+                    logging.info('Unlocking index: '+str(job['buffer_index']))
                 
                 elif job['type'] == 'pyramid':
                     try: time = job['time']
                     except KeyError: time = None
                     index, frame_time = self.getBufferIndex(time)
+                    logging.info('Locking index: '+str(index)+', with time: '+str(frame_time))
                     if index == -1:
                         logging.error('Overran buffer, not enough history')
                     else:
@@ -150,6 +152,9 @@ class FrameServer(mp.Process):
                 
                 elif job['type'] == 'pyramid_ack':
                     self.face_detector_queue.put({'type':'pyramid_data','pyramid_index':job['pyramid_index'],'buffer_index':job['buffer_index'],'frame_time':job['frame_time']})
+                
+                elif job['type'] == 'thumbnail':
+                    pass
                     
                 elif job['type'] == 'error':
                     logging.error(job['message'])
@@ -267,7 +272,7 @@ class ImageReadWorker(mp.Process):
                     buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
                 else:
                     buffer_index = self.newFrameToBuffer(frame)
-                logging.debug('Reporting frame captured to index '+str(buffer_index))
+                logging.info('Reporting frame captured to index '+str(buffer_index))
                 self.parent_queue.put({'type':'camera','index':buffer_index})
                 # Delay
                 if not param_use_cam:

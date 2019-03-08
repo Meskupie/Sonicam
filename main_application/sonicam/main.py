@@ -6,6 +6,7 @@ import numpy as np
 import ctypes
 import base64
 import cv2
+import json
 from kbhit import KBHit
 
 import threading as t
@@ -55,14 +56,17 @@ queue_dict['beamformer'] = mp.Queue()
 # Frame buffer
 raw_frame_arrays = [mp.Array(ctypes.c_ubyte,int(np.prod(param_frame_shape))) for _ in range(param_image_buffer_length)]
 shared_buffer_frames = [(array,np.frombuffer(array.get_obj(),dtype=np.uint8).reshape(param_frame_shape)) for array in raw_frame_arrays]
-# Frame buffer times
 raw_time_array = mp.Array(ctypes.c_double,param_image_buffer_length)
 shared_buffer_times = (raw_time_array,np.frombuffer(raw_time_array.get_obj(),dtype=np.double))
-# Frame buffer index
 shared_buffer_index = mp.Value(ctypes.c_ubyte)
+
 # Pyramid buffer
 raw_pyramid_arrays = [mp.Array(ctypes.c_ubyte,int(round(np.prod(shape)))) for shape in param_pyramid_shapes]
 shared_pyramid_frames = [(raw_pyramid_arrays[i],np.frombuffer(raw_pyramid_arrays[i].get_obj(),dtype=np.uint8).reshape(param_pyramid_shapes[i])) for i in range(len(raw_pyramid_arrays))]
+
+# Thumbnail buffer
+#raw_frame_arrays = [mp.Array(ctypes.c_ubyte,int(np.prod(param_thumbnail_shape))) for _ in range(param_thumbnail_count)]
+#shared_buffer_frames = [(array,np.frombuffer(array.get_obj(),dtype=np.uint8).reshape(param_frame_shape)) for array in raw_frame_arrays]
 
 # =============
 # Initialize processes
@@ -72,23 +76,31 @@ processes.append(FrameServer('FrameServer',param_src,queue_dict,shared_buffer_fr
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
 processes.append(Beamformer('Beamformer',queue_dict))
 
+
+# =============
+# Setup Flask
+# =============
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socket = SocketIO(app)#, logger=True, engineio_logger=True)
+
+@app.route('/')
+def index():
+    return render_template('index2.html')
+
+
 # =============
 # Main application logic
 # =============
-
 tracker = Tracker()
 
 def getAngle(results):
     return 30.0*math.sin(time.time())
 
-def encodeFrame(frame):
-    ret, frame_encoded = cv2.imencode('.jpg',frame)
-    frame_string = base64.b64encode(frame_encoded).decode('utf8')
-    return frame_string
-
 def spinServiceJobs(flag,job_queue):
     time_last = 0
     running_chain = False
+    detection = []
     while flag.value == 1:
         try:
             job = job_queue.get_nowait()
@@ -100,18 +112,21 @@ def spinServiceJobs(flag,job_queue):
                     if running_chain == False:
                         running_chain = True
                         logging.info('Starting chain')
-                        #queue_dict['face_detector'].put({'type':'detect'})
+                        queue_dict['face_detector'].put({'type':'detect'})
                         
                     #tracker.predictionUpdate(job['frame_time'])
                     #estimation = tracker.getEstimation()
                     
                     if param_output_style == 'full':
-                        emitFullFrame(shared_buffer_frames[job['buffer_index']][1])
+                        emitFullFrame(shared_buffer_frames[job['buffer_index']][1],detection)
                         
                         #angle = getAngle(estimation)
                         #queue_dict['beamformer'].put({'type':'angle','angle':angle})
                     
                     elif param_output_style == 'thumbnails':
+                        pass
+                    
+                    elif param_output_style == 'thumbnail_detections':
                         pass
                     
                     elif param_output_style == 'detections':
@@ -122,9 +137,13 @@ def spinServiceJobs(flag,job_queue):
                     time_now = time.time()
                     if time_last != 0:
                         logging.info('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(job['results'])))
+                        assert job['buffer_index'] != None
                     else:
                         logging.info('Detection Frequency: First Frame')
+                        assert job['buffer_index'] == None
                     time_last = time_now
+                    
+                    detection = job['results']
                     
                     # Run measurement update on face results
                     #tracker.measurementUpdate(job['frame_time'],job['results'])
@@ -132,13 +151,14 @@ def spinServiceJobs(flag,job_queue):
                     # Run next detection
                     queue_dict['face_detector'].put({'type':'detect'})
                     
-                    if param_output_style == 'detections':
-                        emitFullFrame(shared_buffer_frames[job['buffer_index']][1],job['results'])
+                    if job['buffer_index'] != None:
+                        if param_output_style == 'detections':
+                            emitFullFrame(shared_buffer_frames[job['buffer_index']][1],detection)
+                            
+                        elif param_output_style == 'thumbnail_detections':
+                            emitThumbnails(shared_buffer_frames[job['buffer_index']][1],detection)
+                            
                         queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
-                        
-                        # Update beamformer
-                        #angle = getAngle(job['results'])
-                        #queue_dict['beamformer'].put({'type':'angle','angle':angle})
                         
                 else:
                     logging.error('Unknown job type')
@@ -146,8 +166,14 @@ def spinServiceJobs(flag,job_queue):
             except KeyError as exception:
                         logging.error('Could not service video driver job with tag: '+str(exception))
                         
+
+def encodeFrame(frame):
+    ret, frame_encoded = cv2.imencode('.jpg',frame)
+    frame_string = base64.b64encode(frame_encoded).decode('utf8')
+    return frame_string
+    
+
 def emitFullFrame(frame_raw,detection=[]): #detection=job['results']
-    logging.info(len(detection))
     frame_scaled = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
     if detection == None:
         frame = frame_scaled
@@ -156,6 +182,46 @@ def emitFullFrame(frame_raw,detection=[]): #detection=job['results']
     frame_string = encodeFrame(frame)
     socket.emit('image',frame_string)
 
+def emitThumbnails(frame_raw,detection):
+    #measure,measure_transformed = Tracker.measureStateEstimate(detection)
+    
+    id_counter = 0
+    thumbnail_list = []
+    for poi in detection:
+        #bb = Tracker.calculateBoundingBox(m)
+        bb = poi['box']
+        c = np.zeros(4)
+        c[0:2] = bb[0:2]
+        c[2] = bb[0]+bb[2]
+        c[3] = bb[1]+bb[3]
+        
+        # Caluclate indexs in the thumbnail that the scaled video will occupy.
+        # Fill remaining area with specified colour
+        nx = np.zeros(2,dtype=int)
+        nx[0] = int(round(param_thumbnail_shape[0]*((max(c[0],0)-c[0])/(c[2]-c[0]))))
+        nx[1] = int(param_thumbnail_shape[0]-round(param_thumbnail_shape[0]*((c[2]-min(c[2],1920))/(c[2]-c[0]))))
+        ny = np.zeros(2,dtype=int)
+        ny[0] = int(round(param_thumbnail_shape[1]*((max(c[1],0)-c[1])/(c[3]-c[1]))))
+        ny[1] = int(param_thumbnail_shape[0]-round(param_thumbnail_shape[1]*((c[3]-min(c[3],1080))/(c[3]-c[1]))))
+        
+        output_shape = (nx[1]-nx[0],ny[1]-ny[0])
+        input_shape = frame_raw[int(c[1]):int(c[3]),int(c[0]):int(c[2]),:].shape
+        if output_shape[0] == 0 or output_shape[1] == 0:
+            logging.warning('Skipping thumbnail with output shape: '+str(output_shape))
+            continue
+        if input_shape[0] == 0 or input_shape[1] == 0 or input_shape[2] == 0:
+            logging.warning('Skipping thumbnail with input shape: '+str(input_shape))
+            continue
+        
+        out = np.array([[param_thumbnail_background]],dtype=np.uint8)
+        out = np.repeat(out,param_thumbnail_shape[0],axis=0)
+        out = np.repeat(out,param_thumbnail_shape[0],axis=1)
+        out[ny[0]:ny[1],nx[0]:nx[1],:] = cv2.resize(frame_raw[int(c[1]):int(c[3]),int(c[0]):int(c[2]),:],output_shape,interpolation = cv2.INTER_AREA)
+        
+        thumbnail_list.append({'id':id_counter,'image':encodeFrame(out)})
+        id_counter += 1
+    
+    socket.emit('thumbnails',json.dumps(thumbnail_list))
 
 def waitForInput(running_flag,threads):
     kb = KBHit()
@@ -169,6 +235,7 @@ def waitForInput(running_flag,threads):
     
     socket.stop()
     
+    
 def killSystem(flag,threads,processes):
     if flag.value == 1:
         logging.warning('System terminating')
@@ -180,16 +247,7 @@ def killSystem(flag,threads,processes):
             logging.warning('Killing Process: '+process.name)
             process.kill()
 
-# =============
-# Setup Flask
-# =============
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socket = SocketIO(app)#, logger=True, engineio_logger=True)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 if __name__ == '__main__':
     running_flag = mp.Value(ctypes.c_ubyte)
@@ -203,3 +261,66 @@ if __name__ == '__main__':
         socket.run(app, host='127.0.0.1')
     finally:
         killSystem(running_flag,threads,processes)
+        
+        
+        
+# # =============
+# # Setup Flask
+# # =============
+# app = Flask(__name__)
+# app.config['SECRET_KEY'] = 'secret!'
+# socket = SocketIO(app)#, logger=True, engineio_logger=True)
+
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
+    
+# def spinServiceJobs(flag,job_queue):
+#     while flag.value == 1:
+#         try:
+#             job = job_queue.get_nowait()
+#         except Empty:
+#             e.sleep(1.0/param_flask_queue_spin_rate)
+#         else:
+#             if job['type'] == 'full_frame':
+#                 frame = addDetectionToFrame(shared_buffer_frames[job['buffer_index']][1],job['results'])
+#                 ret, frame_encoded = cv2.imencode('.jpg',frame)
+                
+#                 queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
+                
+#                 frame_string = base64.b64encode(frame_encoded).decode('utf8')
+#                 socket.emit('image',frame_string)
+        
+# def waitForInput(running_flag,threads):
+#     kb = KBHit()
+#     while True:
+#         if kb.kbhit():
+#             c = kb.getch()
+#             if ord(c) == 27: # ESC
+#                 break
+#         e.sleep(0.1)
+#     kb.set_normal_term()
+    
+#     socket.stop()
+    
+# def killSystem(flag,threads,processes):
+#     if flag.value == 1:
+#         logging.warning('System terminating')
+#         flag.value = 0
+#         for thread in threads:
+#             thread.kill()
+#         for process in processes:
+#             process.kill()
+
+# if __name__ == '__main__':
+#     running_flag = mp.Value(ctypes.c_ubyte)
+#     running_flag.value = 1
+    
+#     threads = []
+#     threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['web_server']))
+#     threads.append(e.spawn(waitForInput,running_flag,threads))
+    
+#     try:
+#         socket.run(app, host='127.0.0.1')
+#     finally:
+#         killSystem(running_flag,threads,processes)

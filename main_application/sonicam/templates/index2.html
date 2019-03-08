@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+    <body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
+        <script type="text/javascript">
+            var socket = io.connect('http://localhost:5000');
+            socket.on('thumbnails',function(JSONObject) {
+                let parsedImage = JSON.parse(JSONObject);
+                console.log(parsedImage);
+            });
+        </script>
+        <p id="text"></p>
+        <h1>Open Log</h1>
+      
+    </body>
+</html>
