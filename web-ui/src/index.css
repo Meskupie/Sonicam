@@ -1,0 +1,9 @@
+body {
+  font-family: 'proxima_nova_softmedium';
+  font-weight: 500;
+  font-style: normal;
+  font-size: 14px;
+  color: #232323;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

@@ -1,1 +1,0 @@
-# Sonicam User Interface

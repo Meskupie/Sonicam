@@ -1,0 +1,17 @@
+@import "../../../../assets/styles/globals";
+
+.Selector{
+    border-radius: 50%;
+    border-color: $select-color;
+    position: absolute;
+    border-style: solid;
+    pointer-events: none;
+    box-sizing: border-box;
+    box-shadow: $large-shadow;
+    transition: 0.3s ease-in-out;
+    opacity: 1;
+}
+
+.Hidden {
+    opacity: 0;
+}

@@ -1,0 +1,52 @@
+@import "../../../../assets/styles/globals";
+
+.VolumeButton {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-image: $gradient;
+    box-shadow: $large-shadow;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.VolumeButtonContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+}
+
+.Text {
+    font-size: 68px;
+    color: #25266C;
+    letter-spacing: -1.39px;
+    text-shadow: 0 0 11px rgba(0,0,0,0.26);
+}
+
+.Minus {
+    display: flex;
+    align-items: center;
+}
+
+.Plus {
+    display: flex;
+    align-items: center;
+}
+
+.ButtonMinus {
+    position: absolute;
+    left: 0px;
+    height: 100%;
+    width: 50%;
+}
+
+.ButtonPlus {
+    position: absolute;
+    right: 0px;
+    height: 100%;
+    width: 50%;
+}

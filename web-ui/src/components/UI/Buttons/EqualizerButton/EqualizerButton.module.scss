@@ -1,0 +1,16 @@
+@import "../../../../assets/styles/globals";
+
+.Equalizer{
+    position: absolute;
+    top: 0px;
+    background-image: $gradient;
+    box-shadow: $large-shadow;
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+}
+
+.Icon{
+    margin: 0 auto;
+    display: block;
+}
