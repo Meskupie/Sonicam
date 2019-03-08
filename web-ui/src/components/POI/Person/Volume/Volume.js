@@ -39,14 +39,15 @@ class Volume extends PureComponent {
             case "normal":
                 circleClass.push(classes.Normal);
                 break;
-            case "muted":
-                circleClass.push(classes.Muted);
-                break;
             case "poor":
                 circleClass.push(classes.Poor);
                 break;
             default:
                 circleClass.push(classes.Lost);
+        }
+
+        if(this.props.isMuted){
+            circleClass.push(classes.Muted);
         }
 
 

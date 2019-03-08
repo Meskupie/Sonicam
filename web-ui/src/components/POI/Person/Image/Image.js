@@ -75,7 +75,7 @@ const image = (props) => {
     }
 
     return (
-        <div style={posStyle} className={classes.Parent} onMouseDown={props.clicked} onMouseUp={props.onMouseUp}>
+        <div style={posStyle} className={classes.Parent} onMouseDown={props.onClick} onMouseUp={props.onMouseUp} onDoubleClick={props.onDoubleClick}>
             {deleteIcon}
             {image}
         </div>

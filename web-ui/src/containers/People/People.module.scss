@@ -3,4 +3,6 @@
 .PeopleContainer{
     width: 100%;
     position: absolute;
+    //remove this to get the text to go on two lines
+    white-space: nowrap;
 }

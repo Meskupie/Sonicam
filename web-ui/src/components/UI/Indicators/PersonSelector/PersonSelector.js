@@ -6,7 +6,8 @@ import classes from './PersonSelector.module.scss';
 //modifying a current tracked face
 
 const personSelector = (props) => {
-    
+    let selectorClass = [classes.Selector]
+
     let personSelectorStyle = {
         top: props.posY + "px",
         left: props.posX + "px",
@@ -20,8 +21,12 @@ const personSelector = (props) => {
         console.log("selector clicked");
     }
 
+    if(props.isHidden){
+        selectorClass.push(classes.Hidden)
+    }
+
     return (
-        <div className = {classes.Selector} style = {personSelectorStyle} onClick={handleClick}/>
+        <div className = {selectorClass.join(' ')} style = {personSelectorStyle} onClick={handleClick}/>
     );
 }
 

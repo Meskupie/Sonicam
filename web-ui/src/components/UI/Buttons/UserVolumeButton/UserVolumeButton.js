@@ -24,8 +24,8 @@ const userVolumeButton = (props) => {
 
     return (
         <div className={classes.VolumeButton} style={userVolumeButtonStyle}>
-            <div className={classes.ButtonMinus} onMouseDown={props.clickedMinus}></div>
-            <div className={classes.ButtonPlus} onMouseDown={props.clickedPlus}></div>
+            <div className={classes.ButtonMinus} onMouseDown={props.clickedMinus} onMouseUp={props.onMouseUpOrOut} onMouseOut={props.onMouseUpOrOut}></div>
+            <div className={classes.ButtonPlus} onMouseDown={props.clickedPlus} onMouseUp={props.onMouseUpOrOut} onMouseOut={props.onMouseUpOrOut}></div>
             <div className={classes.VolumeButtonContainer} style={volumeButtonContainerStyle}>
                 <div className={classes.Minus} style={minusPlusStyle}>
 

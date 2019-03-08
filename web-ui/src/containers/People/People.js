@@ -3,17 +3,8 @@ import Person from '../../components/POI/Person/Person';
 import PersonSelector from '../../components/UI/Indicators/PersonSelector/PersonSelector';
 import classes from './People.module.scss'
 import Aux from '../../hoc/Aux/Aux';
-import { getVideoFeed } from '../../hoc/GetVideoFeed/GetVideoFeed';
 
 class People extends Component {
-    constructor(props) {
-        super(props);
-        getVideoFeed((err, image) => {
-            let parsedImage = JSON.parse(image);
-            //This needs to change.  Setting state in constructor can lead to bad behaviour
-            this.setState({ parsedImage });
-        });
-    }
 
     render() {
         let selectedPOI = this.props.state.POIs.find(x => x.id === this.props.state.selectedPOI);
@@ -29,6 +20,10 @@ class People extends Component {
         }
 
         let persons = this.props.state.POIs.map(POI => {
+            if(POI.position === null){
+                return null;
+            }
+            
             let x = POI.position[0];
             let y = POI.position[1];
             let isBackground = null;
@@ -56,13 +51,17 @@ class People extends Component {
                         widthHeight={this.props.imageWidthHeight}
                         posX={selectPosX + ((this.props.widthHeight - this.props.imageWidthHeight) / 2)}
                         posY={selectPosY + ((this.props.widthHeight - this.props.imageWidthHeight) / 2)}
+                        isHidden={this.props.state.backgroundHeld}
                     />;
             }
 
             let image = " ";
 
-            if (this.state != null) {
-                image = "data:image/jpeg;charset=utf-8;base64," + this.state.parsedImage[POI.id];
+            if (this.props.state.parsedImage !== undefined && POI.id !== "background" && this.props.shouldRefresh) {
+                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.parsedImage[POI.id];
+            }
+            else if(this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && POI.id !== "background" && !this.props.shouldRefresh){
+                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.copyParsedImage[POI.id];
             }
 
             return (
@@ -77,8 +76,9 @@ class People extends Component {
                         normalizerVolume={normalizerVolume}
                         multiplierVolume={multiplierVolume}
                         volumeState={POI.soundStatus}
-                        clicked={(event) => this.props.POIClickedHandler(event, POI.id)}
+                        onClick={(event) => this.props.onPOIClick(event, POI.id)}
                         onMouseUp={(event) => this.props.onPOIMouseUp(event)}
+                        onDoubleClick={(event) => this.props.onPOIDoubleClick(event, POI.id)}
                         imgSource={image}
                         borderWidth={borderWidth}
                         isBackground={isBackground}
@@ -86,6 +86,7 @@ class People extends Component {
                         isSelected={isSelected}
                         shouldRefresh={this.props.shouldRefresh}
                         isHeld={POI.id === this.props.POIHeld}
+                        isMuted={POI.mute}
                     />
                     {selectedIndicator}
                 </Aux>
@@ -93,7 +94,7 @@ class People extends Component {
         });
 
         return (
-            <div className={[classes.PeopleContainer, classes.Scrollable].join(' ')} style={personsContainerStyle} onMouseDown={this.props.onBackgroundMouseDown} onMouseUp={this.props.onBackgroundMouseUp}>
+            <div className={classes.PeopleContainer} style={personsContainerStyle} onMouseDown={this.props.onBackgroundMouseDown} onMouseUp={this.props.onBackgroundMouseUp}>
                 {persons}
             </div>
         );

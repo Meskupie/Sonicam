@@ -38,6 +38,7 @@ const person = (props) => {
                     voulumeSpacing={props.voulumeSpacing}
                     type={"background"}
                     status={props.volumeState}
+                    isMuted={props.isMuted}
                 />
                 <Volume
                     widthHeight={props.widthHeight}
@@ -46,6 +47,7 @@ const person = (props) => {
                     voulumeSpacing={props.voulumeSpacing}
                     type={"normalizer"}
                     status={props.volumeState}
+                    isMuted={props.isMuted}
                 />
                 <Volume
                     widthHeight={props.widthHeight}
@@ -54,6 +56,7 @@ const person = (props) => {
                     voulumeSpacing={props.voulumeSpacing}
                     type={"multiplier"}
                     status={props.volumeState}
+                    isMuted={props.isMuted}
                 />
             </Aux>
             );
@@ -68,8 +71,9 @@ const person = (props) => {
                     posXY={(props.widthHeight - props.imgWidthHeight) / 2}
                     widthHeight={props.imgWidthHeight}
                     imgSource={props.imgSource}
-                    clicked={props.clicked}
+                    onClick={props.onClick}
                     onMouseUp={props.onMouseUp}
+                    onDoubleClick={props.onDoubleClick}
                     isSelected={props.isSelected}
                     isBackground={props.isBackground}
                     borderWidth={props.borderWidth}
@@ -86,6 +90,7 @@ const person = (props) => {
             />
             <SoundStatus
                 status={props.volumeState}
+                isMuted={props.isMuted}
             />
             </div>
         </div>

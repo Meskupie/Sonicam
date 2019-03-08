@@ -27,8 +27,9 @@ class Layout extends Component {
                 <UserVolumeButton 
                     params={buttonParameters} 
                     volume={(this.props.userVolume).toFixed(2)}
-                    clickedPlus={(event) => this.props.userVolumeChangeHandler(event, 'up')}
-                    clickedMinus={(event) => this.props.userVolumeChangeHandler(event, 'down')}/>
+                    clickedPlus={(event) => this.props.userVolumeMouseDownHandler(event, 'up')}
+                    clickedMinus={(event) => this.props.userVolumeMouseDownHandler(event, 'down')}
+                    onMouseUpOrOut={(event) => this.props.userVolumeMouseUpOrOutHandler(event)}/>
                 <EqualizerButton params={buttonParameters}/>
                 <MasterVolumeButton 
                     params={buttonParameters}

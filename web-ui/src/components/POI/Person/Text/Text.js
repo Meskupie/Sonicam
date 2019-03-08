@@ -19,7 +19,7 @@ class Text extends PureComponent {
         }
 
         if (this.props.isHeld) {
-            name = "Remove - " + this.props.name;
+            name = "Edit - " + this.props.name;
         }
 
         return (
