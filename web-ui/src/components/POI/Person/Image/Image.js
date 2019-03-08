@@ -1,6 +1,5 @@
 import React from 'react';
 import classes from './Image.module.scss'
-import Aux from '../../../../hoc/Aux/Aux';
 
 //Where the face video/images will be displayed
 //either when tracked, when adding new faces or when

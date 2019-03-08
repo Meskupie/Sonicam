@@ -1,5 +1,4 @@
 import React, { PureComponent } from "react";
-import Aux from "../../../../hoc/Aux/Aux";
 import classes from "./SoundStatus.module.scss"
 
 class SoundStatus extends PureComponent {
@@ -8,9 +7,9 @@ class SoundStatus extends PureComponent {
         let indicator = null;
         //change this to change volume indicator
         let volumeLevel = {
-            lowVolume: "hidden",
-            medVolume: "hidden",
-            highVolume: "hidden"
+            lowVolume: "",
+            medVolume: "",
+            highVolume: ""
         }
 
         switch (this.props.status) {
@@ -86,7 +85,7 @@ class SoundStatus extends PureComponent {
                                 <stop stopColor="#3D3E96" offset="100%"></stop>
                             </linearGradient>
                         </defs>
-                        <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fill-rule="evenodd">
+                        <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
                             <g id="Untracked-Symbol" transform="translate(0.000000, -1.000000)">
                                 <g id="Group-2" transform="translate(0.000000, 1.000000)">
                                     <rect id="Rectangle" fill="url(#linearGradient-lostStatus1)" x="0" y="4" width="6" height="8" rx="1.5"></rect>

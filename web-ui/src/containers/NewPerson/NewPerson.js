@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Person from '../../components/POI/Person/Person';
 import classes from './NewPerson.module.scss'
-import { copyFile } from 'fs';
 
 class NewPerson extends Component {
     // constructor(props) {
@@ -38,8 +37,8 @@ class NewPerson extends Component {
 
             let image = " ";
 
-            if (this.props.state.parsedImage !== undefined) {
-                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.parsedImage[POI.id];
+            if (this.props.state.parsedImage !== undefined && this.props.state.parsedImage[POI.id] !== undefined) {
+                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.parsedImage[POI.id].image;
             }
 
             x = x + 1;

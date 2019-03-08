@@ -57,11 +57,15 @@ class People extends Component {
 
             let image = " ";
 
-            if (this.props.state.parsedImage !== undefined && POI.id !== "background" && this.props.shouldRefresh) {
-                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.parsedImage[POI.id];
+            if (POI.id !== "background" && this.props.state.parsedImage !== undefined && this.props.state.parsedImage[POI.id] !== undefined && this.props.shouldRefresh) {
+                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.parsedImage[POI.id].image;
             }
-            else if(this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && POI.id !== "background" && !this.props.shouldRefresh){
-                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.copyParsedImage[POI.id];
+            else if(POI.id !== "background" && this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && this.props.state.copyParsedImage[POI.id] !== undefined  && !this.props.shouldRefresh){
+                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.copyParsedImage[POI.id].image;
+            }
+            //This removes POI's if they do not have video feed.  This should not be perminant
+            else if(POI.id !== "background"){
+                return null;
             }
 
             return (

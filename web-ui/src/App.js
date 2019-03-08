@@ -46,7 +46,7 @@ class App extends Component {
           soundStatus: "normal"
         },
         {
-          id: 2,
+          id: 5,
           is_visible: null,
           is_known: null,
           importance: 2,
@@ -58,12 +58,12 @@ class App extends Component {
           soundStatus: "normal"
         },
         {
-          id: 3,
+          id: 0,
           is_visible: null,
           is_known: null,
           importance: 4,
           name: "Name",
-          mute: true,
+          mute: false,
           volumeMultiplier: .5 + Math.random() * .7,
           volumeNormaliser: Math.random() * .3,
           position: [2, 1],
@@ -79,22 +79,22 @@ class App extends Component {
           volumeMultiplier: .5 + Math.random() * .7,
           volumeNormaliser: Math.random() * .3,
           position: [3, 1],
-          soundStatus: "poor"
+          soundStatus: "normal"
         },
         {
-          id: 4,
+          id: 2,
           is_visible: null,
           is_known: null,
           importance: 11,
-          name: "LongName",
+          name: "Name",
           mute: false,
           volumeMultiplier: .5 + Math.random() * .7,
           volumeNormaliser: Math.random() * .3,
           position: [4, 1],
-          soundStatus: "lost"
+          soundStatus: "normal"
         },
         {
-          id: 5,
+          id: 3,
           is_visible: null,
           is_known: null,
           importance: 6,
@@ -180,6 +180,8 @@ class App extends Component {
     holdUserVolumeButton = setTimeout(() => { this.userVolumeButtonHeldHandler(upOrDown, 200) }, 200);
   }
 
+  //The user volume should saturate when the master volume is changed.  Once reached saturation, the user volume should adjust such that the user
+  //volume is saturated.  Then when the master volume is decreased it will go down immediately.
   userVolumeButtonHeldHandler = (upOrDown, delay) => {
     const personIndex = this.state.POIs.findIndex(x => x.id === this.state.selectedPOI);
 
@@ -355,7 +357,7 @@ class App extends Component {
           onBackgroundMouseDown={this.backgroundMouseDownHandler}
           onBackgroundMouseUp={this.backgroundMouseUpHandler}
           onPOIMouseUp={this.POIMouseUpHandler}
-          shouldRefresh={!(this.state.backgroundHeld || this.state.POIHeld)}
+          shouldRefresh={!(this.state.backgroundHeld || this.state.POIHeld !== null)}
           POIHeld={this.state.POIHeld}
         />
         {addPerson}
