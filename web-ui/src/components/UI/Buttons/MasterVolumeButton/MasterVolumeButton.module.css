@@ -1,0 +1,85 @@
+.Scrollable {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  /* Make an auto-hiding scroller for the 3 people using a IE */
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  /* For WebKit implementations, provide inertia scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* We don't want internal inline elements to wrap */
+  white-space: nowrap;
+  /* Remove the default scrollbar for WebKit implementations */ }
+  .Scrollable::-webkit-scrollbar {
+    display: none; }
+
+.VolumeButton {
+  position: absolute;
+  top: 0px;
+  background-image: linear-gradient(-180deg, #4E4FBF 0%, #3A3B8D 100%);
+  box-shadow: 0 8px 27px -8px rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center; }
+
+.SliderContainer {
+  width: 160px;
+  height: 6px;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center; }
+
+.Slider {
+  position: absolute;
+  top: -87px;
+  left: 0px;
+  appearance: none;
+  width: 100%;
+  height: 180px;
+  background: transparent;
+  margin: 0px;
+  border-radius: 3px; }
+
+.SliderActive {
+  top: 0px;
+  left: 0px;
+  background: #25266c;
+  width: 95%;
+  height: 100%;
+  border-radius: 3px; }
+
+.SliderOverlay {
+  top: 0px;
+  left: 0px;
+  background: #51E4B4;
+  height: 100%;
+  border-radius: 3px; }
+
+.Slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 14px 4px rgba(0, 0, 0, 0.22);
+  background: #FFF;
+  border-radius: 8px;
+  border-style: solid;
+  border-width: 3px;
+  border-color: #7CFBAF;
+  cursor: pointer; }
+
+.Slider::-moz-range-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 14px 4px rgba(0, 0, 0, 0.22);
+  background: #FFF;
+  border-radius: 8px;
+  border-style: solid;
+  border-width: 3px;
+  border-color: #7CFBAF;
+  cursor: pointer; }
+
+input:focus {
+  outline: none; }
+
+/*# sourceMappingURL=MasterVolumeButton.module.css.map */

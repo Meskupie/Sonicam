@@ -1,0 +1,38 @@
+.CircularChart {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform: rotate(225deg);
+  animation: progress 1s ease-in-out forwards; }
+
+.Multiplier.Normal {
+  stroke: #21F8B6; }
+.Multiplier.Poor {
+  stroke: #ffa958; }
+.Multiplier.Muted {
+  stroke: #FF4E4E; }
+.Multiplier.Lost {
+  stroke: #6263DB; }
+
+.Normalizer.Normal {
+  stroke: #00a170; }
+.Normalizer.Poor {
+  stroke: #D97212; }
+.Normalizer.Muted {
+  stroke: #C21A1A; }
+
+.Background {
+  stroke: #32338B;
+  animation: none; }
+
+.Circle {
+  fill: none;
+  /*stroke-width: 2.8;*/
+  stroke-linecap: round;
+  animation: inherit; }
+
+@keyframes progress {
+  0% {
+    stroke-dasharray: 0 1000; } }
+
+/*# sourceMappingURL=Volume.module.css.map */
