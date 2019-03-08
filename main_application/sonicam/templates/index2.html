@@ -1,12 +1,42 @@
 <!doctype html>
 <html>
     <body>
+        <img id="image1">
+        <img id="image2">
+        <img id="image3">
+        <img id="image4">
+        <img id="image5">
+        <img id="image6">
+        <img id="image7">
+        <img id="image8">
+        <img id="image9">
+        <img id="image10">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
         <script type="text/javascript">
             var socket = io.connect('http://localhost:5000');
-            socket.on('thumbnails',function(JSONObject) {
-                let parsedImage = JSON.parse(JSONObject);
-                console.log(parsedImage);
+            socket.on('thumbnails',function(image) {
+            let parsedImage = JSON.parse(image);
+            console.log(parsedImage);
+            const imageElm1 = document.getElementById('image1');
+            const imageElm2 = document.getElementById('image2');
+            const imageElm3 = document.getElementById('image3');
+            const imageElm4 = document.getElementById('image4');
+            const imageElm5 = document.getElementById('image5');
+            const imageElm6 = document.getElementById('image6');
+            const imageElm7 = document.getElementById('image7');
+            const imageElm8 = document.getElementById('image8');
+            const imageElm9 = document.getElementById('image9');
+            const imageElm10 = document.getElementById('image10');
+            imageElm1.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[0].image;
+            imageElm2.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[1].image;
+            imageElm3.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[2].image;
+            imageElm4.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[3].image;
+            imageElm5.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[4].image;
+            imageElm6.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[5].image;
+            imageElm7.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[6].image;
+            imageElm8.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[7].image;
+            imageElm9.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[8].image;
+            imageElm10.src = "data:image/jpeg;charset=utf-8;base64,"+parsedImage[9].image;
             });
         </script>
         <p id="text"></p>

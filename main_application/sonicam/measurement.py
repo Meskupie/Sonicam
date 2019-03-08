@@ -71,7 +71,7 @@ class FaceDetector(mp.Process):
                 
                 if self.internal_state == self.states['idle']:
                     if job['type'] == 'detect':
-                        logging.info('Starting Detection')
+                        logging.debug('Starting Detection')
                         self.detector.reset()
                         self.internal_state = self.states['input']
                         self.detector.reset()

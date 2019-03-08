@@ -117,20 +117,15 @@ def spinServiceJobs(flag,job_queue):
                     #tracker.predictionUpdate(job['frame_time'])
                     #estimation = tracker.getEstimation()
                     
-                    if param_output_style == 'full':
-                        emitFullFrame(shared_buffer_frames[job['buffer_index']][1],detection)
+                    if job['buffer_index']%param_output_every == 0:
+                        if param_output_style == 'full':
+                            emitFullFrame(shared_buffer_frames[job['buffer_index']][1],detection)
+                            
+                            #angle = getAngle(estimation)
+                            #queue_dict['beamformer'].put({'type':'angle','angle':angle})
                         
-                        #angle = getAngle(estimation)
-                        #queue_dict['beamformer'].put({'type':'angle','angle':angle})
-                    
-                    elif param_output_style == 'thumbnails':
-                        pass
-                    
-                    elif param_output_style == 'thumbnail_detections':
-                        pass
-                    
-                    elif param_output_style == 'detections':
-                        pass
+                        elif param_output_style == 'thumbnails':
+                            emitThumbnails(shared_buffer_frames[job['buffer_index']][1],detection)
                     
                 elif job['type'] == 'face_results':
                     # Record the frame rate
@@ -143,21 +138,21 @@ def spinServiceJobs(flag,job_queue):
                         assert job['buffer_index'] == None
                     time_last = time_now
                     
-                    detection = job['results']
-                    
                     # Run measurement update on face results
                     #tracker.measurementUpdate(job['frame_time'],job['results'])
-
+                    
                     # Run next detection
                     queue_dict['face_detector'].put({'type':'detect'})
                     
                     if job['buffer_index'] != None:
+                        detection = job['results']
+                        
                         if param_output_style == 'detections':
                             emitFullFrame(shared_buffer_frames[job['buffer_index']][1],detection)
                             
                         elif param_output_style == 'thumbnail_detections':
                             emitThumbnails(shared_buffer_frames[job['buffer_index']][1],detection)
-                            
+                        
                         queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
                         
                 else:
@@ -185,15 +180,26 @@ def emitFullFrame(frame_raw,detection=[]): #detection=job['results']
 def emitThumbnails(frame_raw,detection):
     #measure,measure_transformed = Tracker.measureStateEstimate(detection)
     
+    face_scales = np.zeros(len(detection))
+    for i,poi in enumerate(detection):
+        bb = poi['box']
+        face_scales[i] = int(round((bb[2]+bb[3])/2)*param_thumbnail_scale)
+    sorted_detection = [detection[i] for i in np.flip(np.argsort(face_scales))]
+    
     id_counter = 0
     thumbnail_list = []
-    for poi in detection:
+    for poi in sorted_detection:
         #bb = Tracker.calculateBoundingBox(m)
         bb = poi['box']
+        w = int(round((bb[2]+bb[3])/2)*param_thumbnail_scale)
+        cx = int(round(bb[0]+(bb[2]/2)))
+        cy = int(round(bb[1]+(bb[3]/2)))
+        
         c = np.zeros(4)
-        c[0:2] = bb[0:2]
-        c[2] = bb[0]+bb[2]
-        c[3] = bb[1]+bb[3]
+        c[0] = int(round((cx-w/2)))
+        c[1] = int(round((cy-w/2)))
+        c[2] = int(round((cx+w/2)))
+        c[3] = int(round((cy+w/2)))
         
         # Caluclate indexs in the thumbnail that the scaled video will occupy.
         # Fill remaining area with specified colour
@@ -205,18 +211,19 @@ def emitThumbnails(frame_raw,detection):
         ny[1] = int(param_thumbnail_shape[0]-round(param_thumbnail_shape[1]*((c[3]-min(c[3],1080))/(c[3]-c[1]))))
         
         output_shape = (nx[1]-nx[0],ny[1]-ny[0])
-        input_shape = frame_raw[int(c[1]):int(c[3]),int(c[0]):int(c[2]),:].shape
+        input_shape = frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:].shape
         if output_shape[0] == 0 or output_shape[1] == 0:
             logging.warning('Skipping thumbnail with output shape: '+str(output_shape))
             continue
         if input_shape[0] == 0 or input_shape[1] == 0 or input_shape[2] == 0:
             logging.warning('Skipping thumbnail with input shape: '+str(input_shape))
+            logging.warning(c)
             continue
         
         out = np.array([[param_thumbnail_background]],dtype=np.uint8)
         out = np.repeat(out,param_thumbnail_shape[0],axis=0)
         out = np.repeat(out,param_thumbnail_shape[0],axis=1)
-        out[ny[0]:ny[1],nx[0]:nx[1],:] = cv2.resize(frame_raw[int(c[1]):int(c[3]),int(c[0]):int(c[2]),:],output_shape,interpolation = cv2.INTER_AREA)
+        out[ny[0]:ny[1],nx[0]:nx[1],:] = cv2.resize(frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:],output_shape,interpolation = cv2.INTER_AREA)
         
         thumbnail_list.append({'id':id_counter,'image':encodeFrame(out)})
         id_counter += 1

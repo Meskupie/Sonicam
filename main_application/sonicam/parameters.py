@@ -8,7 +8,7 @@ param_jetson = 'tegra' in os.uname()[1]
 # List of parameters for use in Sonicam
 
 # Common
-param_cam_fps = 10
+param_cam_fps = 30
 if param_jetson:
     param_use_cam = True
     param_flip_video = False
@@ -73,7 +73,7 @@ param_max_uncertainty = 10
 param_dist_func = 'norm' #'norm'={euclidian distance},
 
 param_face_diameter = 0.16 # Meters (~6 inch)
-param_tracker_buffer_length = 20
+param_tracker_buffer_length = 200
 param_aov_x = math.radians(90)
 param_aov_y = math.radians(50)
 param_aov_d = math.radians(102)
@@ -82,13 +82,15 @@ param_fov_l_y = (param_frame_shape[0]/(2*math.tan(param_aov_y/2)))
 param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 
 # Webserver
-param_output_style = 'thumbnail_detections' #'detections' #'full' #'thumbnails'
+param_output_every = 2
+
+param_output_style = 'thumbnails' #'detections' #'full' #'thumbnails'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 
 param_thumbnail_count = 10
 param_thumbnail_shape = (115,115,3)
-param_thumbnail_zoom = 3
+param_thumbnail_scale = 3
 param_thumbnail_background = [139,51,50] #32338B, rgb: 50,51,139
 
 # Shared

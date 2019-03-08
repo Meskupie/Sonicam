@@ -137,13 +137,13 @@ class FrameServer(mp.Process):
                     
                 elif job['type'] == 'unlock_frame':
                     self.freeBufferIndex(job['buffer_index'])
-                    logging.info('Unlocking index: '+str(job['buffer_index']))
+                    logging.debug('Unlocking index: '+str(job['buffer_index']))
                 
                 elif job['type'] == 'pyramid':
                     try: time = job['time']
                     except KeyError: time = None
                     index, frame_time = self.getBufferIndex(time)
-                    logging.info('Locking index: '+str(index)+', with time: '+str(frame_time))
+                    logging.debug('Locking index: '+str(index)+', with time: '+str(frame_time))
                     if index == -1:
                         logging.error('Overran buffer, not enough history')
                     else:
@@ -272,7 +272,7 @@ class ImageReadWorker(mp.Process):
                     buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
                 else:
                     buffer_index = self.newFrameToBuffer(frame)
-                logging.info('Reporting frame captured to index '+str(buffer_index))
+                logging.debug('Reporting frame captured to index '+str(buffer_index))
                 self.parent_queue.put({'type':'camera','index':buffer_index})
                 # Delay
                 if not param_use_cam:
