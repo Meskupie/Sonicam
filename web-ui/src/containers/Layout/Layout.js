@@ -26,7 +26,7 @@ class Layout extends Component {
             <div className={classes.Layout} style={buttonContainerStyle}>
                 <UserVolumeButton 
                     params={buttonParameters} 
-                    volume={(this.props.userVolume).toFixed(2)}
+                    volume={(this.props.userVolume)}
                     clickedPlus={(event) => this.props.userVolumeMouseDownHandler(event, 'up')}
                     clickedMinus={(event) => this.props.userVolumeMouseDownHandler(event, 'down')}
                     onMouseUpOrOut={(event) => this.props.userVolumeMouseUpOrOutHandler(event)}/>
@@ -35,7 +35,9 @@ class Layout extends Component {
                     params={buttonParameters}
                     changed={(event) => this.props.masterVolumeChangeHandler(event)}
                     volume={this.props.masterVolume * 100}/>
-                <SettingsButton params={buttonParameters}/>
+                <SettingsButton 
+                    params={buttonParameters}
+                    clicked={(event) => this.props.settingsButtonClickedHandler(event)}/>
             </div>
         );
     }

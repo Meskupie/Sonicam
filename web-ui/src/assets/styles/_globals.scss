@@ -26,3 +26,10 @@ $green-gradient-light: linear-gradient(0deg, #4BF48F 0%, #9FFFC6 100%);
         display: none;
     }
 }
+
+.TextBackground {
+    font-size: 68px;
+    color: #25266C;
+    letter-spacing: -.5px;
+    text-shadow: 0 0 6px rgba(0,0,0,0.26);
+}

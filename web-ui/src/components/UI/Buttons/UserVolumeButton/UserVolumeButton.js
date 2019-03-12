@@ -57,7 +57,7 @@ const userVolumeButton = (props) => {
                 </svg>
                     
             </div>
-            <div className={classes.Text} style={textStyle}>
+            <div className={classes.TextBackground} style={textStyle}>
                 {props.volume}
             </div>
             <div className={classes.Plus} style={minusPlusStyle}>

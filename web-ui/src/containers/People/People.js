@@ -31,7 +31,7 @@ class People extends Component {
             isSelected = false;
 
             let multiplierVolume = POI.volumeMultiplier * this.props.state.masterVolume;
-            let normalizerVolume = POI.volumeNormaliser + multiplierVolume;
+            let normalizerVolume = POI.volumeNormalizer + multiplierVolume;
 
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
             let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1);
@@ -63,10 +63,10 @@ class People extends Component {
             else if(POI.id !== "background" && this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && this.props.state.copyParsedImage[POI.id] !== undefined  && !this.props.shouldRefresh){
                 image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.copyParsedImage[POI.id].image;
             }
-            //This removes POI's if they do not have video feed.  This should not be perminant
-            else if(POI.id !== "background"){
-                return null;
-            }
+            // //This removes POI's if they do not have video feed.  This should not be perminant
+            // else if(POI.id !== "background"){
+            //     return null;
+            // }
 
             return (
                 <Aux key={POI.id}>

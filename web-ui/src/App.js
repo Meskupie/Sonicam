@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import classes from './App.module.scss';
 import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
+import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
 import { getVideoFeed } from './hoc/GetVideoFeed/GetVideoFeed';
 
@@ -32,6 +33,7 @@ class App extends Component {
       copyParsedImage: null,
       POIClicked: false,
       POIHeld: null,
+      displaySettings: false,
       POIs: [
         {
           id: "background",
@@ -40,8 +42,8 @@ class App extends Component {
           importance: null,
           name: "Background",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: 0,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: 0,
           position: [1, 1],
           soundStatus: "normal"
         },
@@ -52,8 +54,8 @@ class App extends Component {
           importance: 2,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: [2, 2],
           soundStatus: "normal"
         },
@@ -64,8 +66,8 @@ class App extends Component {
           importance: 4,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: [2, 1],
           soundStatus: "normal"
         },
@@ -76,8 +78,8 @@ class App extends Component {
           importance: 5,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: [3, 1],
           soundStatus: "normal"
         },
@@ -88,8 +90,8 @@ class App extends Component {
           importance: 11,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: [4, 1],
           soundStatus: "normal"
         },
@@ -100,8 +102,8 @@ class App extends Component {
           importance: 6,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: [1, 2],
           soundStatus: "normal"
         },
@@ -112,8 +114,8 @@ class App extends Component {
           importance: 9,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: null,
           soundStatus: "normal"
         },
@@ -124,8 +126,8 @@ class App extends Component {
           importance: 8,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: null,
           soundStatus: "normal"
         },
@@ -136,11 +138,26 @@ class App extends Component {
           importance: 1,
           name: "Name",
           mute: false,
-          volumeMultiplier: .5 + Math.random() * .7,
-          volumeNormaliser: Math.random() * .3,
+          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeNormalizer: Math.random() * .3,
           position: null,
           soundStatus: "normal"
-        }]
+        }],
+      selectedSource: "camera",
+      sources: [
+        {
+          id: "camera",
+          name: "Camera",
+        },
+        {
+          id: "0",
+          name: "File: test1-fast-movement",
+        },
+        {
+          id: "1",
+          name: "File: test2-stationary",
+        }
+      ]
     };
     getVideoFeed((err, image) => {
       let parsedImage = JSON.parse(image);
@@ -151,6 +168,22 @@ class App extends Component {
 
   masterVolumeChangeHandler = (event) => {
     this.setState({ masterVolume: event.target.value / 100 });
+
+    for (var i = 0; i < this.state.POIs.length; i++) {
+      if ((this.state.POIs[i].volumeMultiplier * this.state.masterVolume + this.state.POIs[i].volumeNormalizer) > 3) {
+        const POI = {
+          ...this.state.POIs[i]
+        }
+
+        POI.volumeMultiplier = ((3 - this.state.POIs[i].volumeNormalizer) / this.state.masterVolume);
+        POI.volumeMultiplier = POI.volumeMultiplier.toFixed(2);
+
+        const POIs = [...this.state.POIs];
+
+        POIs[i] = POI;
+        this.setState({ POIs: POIs });
+      }
+    }
   }
 
   userVolumeMouseDownHandler = (event, upOrDown) => {
@@ -162,13 +195,15 @@ class App extends Component {
     }
 
     if (upOrDown === 'up') {
-      if ((POI.volumeMultiplier + POI.volumeNormaliser) < 3) {
-        POI.volumeMultiplier = POI.volumeMultiplier + .01;
+      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) < 3) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .01).toFixed(2);
+        console.log("up " + POI.volumeMultiplier);
       }
     }
     else if (upOrDown === 'down') {
-      if ((POI.volumeMultiplier + POI.volumeNormaliser) - .01 > 0) {
-        POI.volumeMultiplier = POI.volumeMultiplier - .01;
+      if (POI.volumeMultiplier - .01 > 0) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .01).toFixed(2);
+        console.log("down " + POI.volumeMultiplier);
       }
     }
 
@@ -177,7 +212,7 @@ class App extends Component {
 
     this.setState({ POIs: POIs });
 
-    holdUserVolumeButton = setTimeout(() => { this.userVolumeButtonHeldHandler(upOrDown, 200) }, 200);
+    holdUserVolumeButton = setTimeout(() => { this.userVolumeButtonHeldHandler(upOrDown, 300) }, 300);
   }
 
   //The user volume should saturate when the master volume is changed.  Once reached saturation, the user volume should adjust such that the user
@@ -190,13 +225,15 @@ class App extends Component {
     }
 
     if (upOrDown === 'up') {
-      if ((POI.volumeMultiplier + POI.volumeNormaliser) < 3) {
-        POI.volumeMultiplier = POI.volumeMultiplier + .01;
+      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) < 3) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .01).toFixed(2);
+        console.log("up " + POI.volumeMultiplier);
       }
     }
     else if (upOrDown === 'down') {
       if (POI.volumeMultiplier - .01 > 0) {
-        POI.volumeMultiplier = POI.volumeMultiplier - .01;
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .01).toFixed(2);
+        console.log("down " + POI.volumeMultiplier);
       }
     }
 
@@ -205,7 +242,9 @@ class App extends Component {
 
     this.setState({ POIs: POIs });
 
-    delay *= 0.9;
+    if (delay >= 40) {
+      delay *= 0.90;
+    }
 
     holdUserVolumeButton = setTimeout(() => { this.userVolumeButtonHeldHandler(upOrDown, delay) }, delay);
 
@@ -215,12 +254,23 @@ class App extends Component {
     clearInterval(holdUserVolumeButton);
   }
 
+  settingsButtonClickedHandler = (event) => {
+    let tempDisplaySettings = !this.state.displaySettings;
+    this.setState({ displaySettings: tempDisplaySettings });
+  }
+
+  sourceClickedHandler = (selectedId) => {
+    console.log("source clicked");
+    this.setState({ selectedSource: selectedId });
+  }
+
   POIClickHandler = (event, selectedId) => {
     event.stopPropagation();
     this.setState({ selectedPOI: selectedId });
     console.log("POI clicked")
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: null });
+    this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
     holdPOIOrBackground = setTimeout(() => { this.POIHeldHandler(selectedId) }, 400);
   }
@@ -266,6 +316,7 @@ class App extends Component {
     console.log('background mouse down');
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: null });
+    this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
     holdPOIOrBackground = setTimeout(() => { this.backgroundHeldHandler() }, 400);
   }
@@ -294,8 +345,21 @@ class App extends Component {
     }
 
     var addPerson = null;
+    var settings = null;
 
-    if (this.state.backgroundHeld === true) {
+    if (this.state.displaySettings) {
+      settings =
+        <Settings
+          offsetUI={SPACING_UI}
+          offsetTop={SPACING_UI * 2 + BUTTON_HEIGHT}
+          width={APP_WIDTH - SPACING_UI - (SPACING_UI + WIDTH_HEIGHT * 3 + SPACING_X * 2.5)}
+          selectedSource={this.state.selectedSource}
+          sources={this.state.sources}
+          sourceClickedHandler={this.sourceClickedHandler}
+        />
+    }
+
+    if (this.state.backgroundHeld) {
       addPerson =
         <NewPerson
           appWidth={APP_WIDTH}
@@ -341,6 +405,7 @@ class App extends Component {
           userVolume={this.state.POIs.find(x => x.id === this.state.selectedPOI).volumeMultiplier}
           userVolumeMouseDownHandler={this.userVolumeMouseDownHandler}
           userVolumeMouseUpOrOutHandler={this.userVolumeMouseUpOrOutHandler}
+          settingsButtonClickedHandler={this.settingsButtonClickedHandler}
         />
         <People
           height={APP_HEIGHT - BUTTON_HEIGHT - (SPACING_UI * 2)}
@@ -361,6 +426,7 @@ class App extends Component {
           POIHeld={this.state.POIHeld}
         />
         {addPerson}
+        {settings}
       </div>
     );
   }

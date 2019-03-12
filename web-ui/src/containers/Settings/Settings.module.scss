@@ -1,0 +1,54 @@
+@import "../../assets/styles/globals";
+
+.Settings {
+    position: absolute;
+    background-image: $gradient;
+    box-shadow: $large-shadow;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Source{
+    font-size: 17px;
+    text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.16) !important;
+    display: flex;
+}
+
+.SourceContainer{
+    
+}
+
+.SourceTitle{
+    font-size: 25px;
+    text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.16) !important;
+}
+
+.SourceBreak{
+    margin: 0px;
+    border: none;
+    background-color: $background-color;
+    border-radius: 2px;
+    height: 2px;
+}
+
+.Spinner, .SpinnerBackground, .Play{
+    position: absolute;
+}
+
+.Spinner{
+    transform: rotate(90deg);
+    animation: spin 2s linear infinite;
+}
+
+.StatusContainer{
+    height: 20px;
+    width: 20px;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(45deg); }
+    100% { transform: rotate(405deg); }
+  }
