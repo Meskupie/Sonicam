@@ -51,17 +51,13 @@ class FrameServer(mp.Process):
         self.is_rolling = False
     
     # Startup all processes and threads that run in the background
-    def startProcesses(self):
+    def startWorkerProcesses(self):
         # Create Workers
         self.image_processing_workers = []
         for i in range(param_n_image_workers):
             name = 'ImageWorker-'+str(i+1)+'of'+str(param_n_image_workers)
             worker = ImageProcessingWorker(name,self.run_event,self.job_queue,self.image_job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'],shared_vars['pyramid_frames'])
             self.image_processing_workers.append(worker)
-            
-        # Create Camera Driver
-        name = 'CameraReader'
-        self.camera_driver_worker = ImageReadWorker(name,self.src,self.run_event,self.job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'])
     
     # Analyse the buffer index and the delta time between frames to verify that no frames were skipped
     # and that the current frame buffer is consistent.
@@ -123,6 +119,11 @@ class FrameServer(mp.Process):
                 if job['type'] == 'kill':
                     self.killSelf()
                     break
+                
+                elif job['type'] == 'start':
+                    # Create Camera Driver
+                    name = 'CameraReader'
+                    self.camera_driver_worker = ImageReadWorker(name,self.src,self.run_event,self.job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'])
                 
                 elif job['type'] == 'camera':
                     self.updateBufferIndex(job['index'])
@@ -214,7 +215,7 @@ class FrameServer(mp.Process):
         logging.info('Starting Process')
         try:
             self.initObjects()
-            self.startProcesses()
+            self.startWorkerProcesses()
             self.spinServiceJobs()
         except Exception as e:
             logging.error('Killed due to ' + str(e))

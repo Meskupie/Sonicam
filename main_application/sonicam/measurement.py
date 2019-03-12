@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import time
 import math
@@ -137,6 +138,7 @@ class Tracker():
             pass
     
     def predictionUpdate(self,time):
+        # logging.info('======= prediction update =======')
         # Run prediction and prune tracks that are no longer "alive"
         alive_tracks = []
         for i,track in enumerate(self.track_filters):
@@ -149,10 +151,15 @@ class Tracker():
         # Return new estimate
         
     def measurementUpdate(self,time,results):
+        # logging.info('======= measurement update =======')
         measure, measure_transformed = Tracker.measureStateEstimate(results)
 
         track_locations = [t.location for t in self.track_filters]
+        #logging.info('Tracks: '+str(track_locations))
+        #logging.info('Measur: '+str(measure_transofrmed))
         measure_link = Tracker.measureAssignment(track_locations,measure_transformed,dist_func=param_dist_func)
+        #logging.info('Links : '+str(measure_link))
+        # logging.info('Measur: '+str(measure))
         
         for i,link in enumerate(measure_link):
             if link == None: # No assosiated tracker
@@ -162,6 +169,9 @@ class Tracker():
                 self.track_filters.append(new_track)
             else: # Measure update the tracker
                 self.track_filters[link].measureUpdate(time,measure[i])
+                
+        for track in self.track_filters:
+            logging.info('Track '+str(track.track_id)+': '+str(max(track.uncertainty_meas)))
     
     def getEstimation(self):
         estimation = []
@@ -210,39 +220,41 @@ class Tracker():
         measure_transformed = []
         for result in results:
             bb = result['box']
-            state_d = param_fov_l*param_face_diameter/((bb[2]+bb[3])/2)
+            pw = (bb[2]+bb[3])/2
+            state_d = param_fov_l*param_face_diameter/pw
             px_c = (bb[0]+(bb[2]/2.0))-(param_frame_shape[1]/2)
             state_x = state_d*px_c/param_fov_l
             py_c = (param_frame_shape[0]/2)-(bb[1]+(bb[3]/2.0))
             state_y = state_d*py_c/param_fov_l
             
-            measure.append(np.array([px_c,py_c,state_d]))
+            measure.append(np.array([px_c,py_c,pw]))
             measure_transformed.append(np.array([state_x,state_y,state_d]))
         return measure, measure_transformed
     
-    def calculateBoundingBox(state):
+    def boundingBoxFromState(full_state,scale=1):
+        if len(full_state) == 6:
+            state = full_state[[0,2,4]]
+        else:
+            state = full_state
         px_c = state[0]*param_fov_l/state[2]
         py_c = state[1]*param_fov_l/state[2]
         pw = param_fov_l*param_face_diameter/state[2]
+        diam = pw*scale
         
-        bb = np.zeros(4)
-        bb[0] = int(round(px_c-(pw*param_thumbnail_zoom/2))+(param_frame_shape[1]/2))
-        bb[1] = int(round(py_c-(pw*param_thumbnail_zoom/2))+(param_frame_shape[0]/2))
-        bb[2] = pw*param_thumbnail_zoom
-        bb[3] = pw*param_thumbnail_zoom
-        print('start')
-        print(state)
-        print(bb)
-        print('finish')
+        bb = np.zeros(4,dtype=int)
+        bb[0] = int(round(px_c-(diam/2)+(param_frame_shape[1]/2)))
+        #px_c-(bb[2]/2.0)+(param_frame_shape[1]/2) = bb[0]
+        bb[1] = int(round(-py_c-(diam/2)+(param_frame_shape[0]/2)))
+        #-py_c-(bb[3]/2.0)+(param_frame_shape[0]/2) = bb[1]
+        bb[2] = diam
+        bb[3] = diam
         return bb
-
-
+    
+    
 class EKF():
     def __init__(self,track_id,time,pos_start=np.array([0,0,0])):
         self.alive = True
         self.track_id = track_id
-        self.location = pos_start
-        self.uncertainty = param_motion_stddev*param_motion_start_k
         
         self.R = np.diag(np.square(param_motion_stddev))
         self.Q = np.diag(np.square(param_measure_stddev))
@@ -256,17 +268,33 @@ class EKF():
         self.i_cur = 1
         self.x_buffer[:,self.i_pre] = np.array([pos_start[0],0,pos_start[1],0,pos_start[2],0])
         self.s_buffer[:,:,self.i_pre] = np.diag(np.square(param_motion_stddev)*param_motion_start_k)
-        self.time_buffer[0] = time
-    
-    def updateIteration(self):
-        # update location
-        state = self.x_buffer[:,self.i_pre]
-        self.location = np.array([state[0],state[2],state[4]])
+        self.time_buffer[self.i_pre] = time
         
-        # update lost flag
-        self.uncertainty,error_axis = np.linalg.eig(self.s_buffer[:,:,self.i_pre])
-        if max(self.uncertainty) > param_max_uncertainty:
-            self.alive = False
+        self.location = self.getLocation()
+        self.uncertainty = self.getUncertainty()
+        self.uncertainty_meas = self.getUncertainty()
+    
+    def predictionUpdate(self,time):
+        logging.debug('Starting prediction update')
+        
+        self.time_buffer[self.i_cur] = time
+        dt = self.time_buffer[self.i_cur]-self.time_buffer[self.i_pre]
+        dt = max(0,dt)
+        
+        self.x_buffer[:,self.i_cur] = EKF.runMotionModel(dt,self.x_buffer[:,self.i_pre])
+        
+        G = EKF.calculateG(dt)
+        self.s_buffer[:,:,self.i_cur] = np.matmul(np.matmul(G,self.s_buffer[:,:,self.i_pre]),np.transpose(G))+self.R
+        
+        self.i_pre = self.i_cur
+        self.i_cur += 1
+        self.updateIteration()
+        
+        if self.i_cur >= param_tracker_buffer_length:
+            logging.error('Overran tracking buffer between measurements (index)')
+        
+        #logging.info('Track '+str(self.track_id)+' state '+str(self.x_buffer[:,self.i_pre]))
+        logging.debug('Done prediction update')
     
     def measureUpdate(self,time,measure):
         logging.debug('Starting measurement update')
@@ -278,38 +306,44 @@ class EKF():
         new_i_pre = 0
         new_i_cur = 1
         
-        #logging.info(str(time)+' === \n'+str(self.time_buffer))
+        # Find the index closest to measurement time, use this to extrapolate from
         link_i = np.argmin(np.abs(self.time_buffer-time))
-        #logging.info(str(link_i))
-        
         dt = (self.time_buffer[link_i]-time)
-        logging.info(str(dt))
+        
+        # logging.info('Track '+str(self.track_id)+' buffer '+str((self.time_buffer[np.nonzero(self.time_buffer)]-time)))
+        # logging.info('Track '+str(self.track_id)+' link '+str(link_i))
+        # logging.info('Track '+str(self.track_id)+' dt '+str(dt))
+        # logging.info('Track '+str(self.track_id)+' state '+str(self.x_buffer[:,link_i]))
+        
         if abs(dt) > 0.001:
             logging.error('Overran tracking buffer between measurements (time)')
         
+        # Set the initial
         new_x_buffer[:,new_i_pre] = self.x_buffer[:,link_i]
         new_s_buffer[:,:,new_i_pre] = self.s_buffer[:,:,link_i]
-        new_time_buffer[new_i_pre] = time
+        new_time_buffer[new_i_pre] = self.time_buffer[link_i]
         
         X = new_x_buffer[:,new_i_pre]
         S = new_s_buffer[:,:,new_i_pre]
         H = EKF.calculateH(new_x_buffer[:,new_i_pre])
         K = np.matmul(np.matmul(S,np.transpose(H)),np.linalg.inv(np.matmul(np.matmul(H,S),np.transpose(H))+self.Q))
         Inov = measure-EKF.estimateMeasurement(new_x_buffer[:,new_i_pre])
+        # logging.info('Track '+str(self.track_id)+' measure '+str(measure))
+        # logging.info('Track '+str(self.track_id)+' predict '+str(EKF.estimateMeasurement(new_x_buffer[:,new_i_pre])))
         
         # update the values in the buffer based on the measurement
         new_x_buffer[:,new_i_pre] = X+np.matmul(K,Inov)
-        new_s_buffer[:,new_i_pre] = np.matmul(np.eye(6)-np.matmul(K,H),new_s_buffer[:,new_i_pre])
+        new_s_buffer[:,:,new_i_pre] = np.matmul(np.eye(6)-np.matmul(K,H),new_s_buffer[:,:,new_i_pre])
         
-        for i in range(1,self.i_cur-link_i):
-            new_time_buffer[new_i_pre+i] = self.time_buffer[link_i+i]
-            dt = max(0,new_time_buffer[new_i_pre+i]-new_time_buffer[new_i_pre+i-1])
-            new_x_buffer[:,new_i_pre+i] = EKF.runMotionModel(dt,new_x_buffer[:,new_i_pre+i-1])
+        for i in range(0,self.i_pre-link_i):
+            new_time_buffer[new_i_cur] = self.time_buffer[link_i+i+1]
+            dt = max(0,new_time_buffer[new_i_cur+i]-new_time_buffer[new_i_pre])
+            new_x_buffer[:,new_i_cur] = EKF.runMotionModel(dt,new_x_buffer[:,new_i_pre])
             G = EKF.calculateG(dt)
-            new_s_buffer[:,:,new_i_pre+i] = np.matmul(np.matmul(G,new_s_buffer[:,:,new_i_pre+i-1]),np.linalg.inv(G))+self.R
+            new_s_buffer[:,:,new_i_cur] = np.matmul(np.matmul(G,new_s_buffer[:,:,new_i_pre]),np.linalg.inv(G))+self.R
             
             new_i_pre = new_i_cur
-            new_i_cur = new_i_cur + 1
+            new_i_cur += 1
         
         self.time_buffer = new_time_buffer
         self.x_buffer = new_x_buffer
@@ -320,31 +354,23 @@ class EKF():
         self.i_cur = new_i_cur
         
         self.updateIteration()
+        self.uncertainty_meas = self.getUncertainty()
         
         logging.debug('Done measurement update')
         
-        
-    def predictionUpdate(self,time):
-        logging.debug('Starting prediction update')
-        
-        self.time_buffer[self.i_cur] = time
-        dt = max(0,self.time_buffer[self.i_cur]-self.time_buffer[self.i_pre])
-        
-        self.x_buffer[:,self.i_cur] = EKF.runMotionModel(dt,self.x_buffer[:,self.i_pre])
-        G = EKF.calculateG(dt)
-        self.s_buffer[:,:,self.i_cur] = np.matmul(np.matmul(G,self.s_buffer[:,:,self.i_pre]),np.linalg.inv(G))+self.R
-        
-        self.i_pre = self.i_cur
-        self.i_cur = self.i_cur + 1
-        
-        self.updateIteration()
+    def updateIteration(self):
+        self.location = self.getLocation()
+        self.uncertainty = self.getUncertainty()
 
-        if self.i_cur >= param_tracker_buffer_length:
-            logging.error('Overran tracking buffer between measurements (index)')
-        
-        logging.debug('Done prediction update')
-        
-        
+        if max(self.uncertainty) > param_max_uncertainty:
+            self.alive = False
+            
+    def getLocation(self):
+        return self.x_buffer[[0,2,4],self.i_pre]
+    
+    def getUncertainty(self):
+        return np.linalg.eig(self.s_buffer[:,:,self.i_pre])[0]
+    
     def calculateG(dt):
         # Build the matrix
         G = np.zeros((6,6))
@@ -368,14 +394,14 @@ class EKF():
         H[0,4] = -param_fov_l*state[0]/x_4_2
         H[1,2] = param_fov_l/state[4]
         H[1,4] = -param_fov_l*state[2]/x_4_2
-        H[2,4] = 1
+        H[2,4] = -param_fov_l*param_face_diameter/x_4_2#1
         return H
         
     def estimateMeasurement(state):
         measure = np.zeros(3)
-        measure[0] = (state[0]/state[4])*param_fov_l
-        measure[1] = (state[2]/state[4])*param_fov_l
-        measure[2] =  state[4]
+        measure[0] = (state[0]*param_fov_l)/state[4]
+        measure[1] = (state[2]*param_fov_l)/state[4]
+        measure[2] = param_fov_l*param_face_diameter/state[4]
         return measure
         
     def runMotionModel(dt,state):
@@ -383,7 +409,7 @@ class EKF():
         new_state[0] = state[1]*dt+state[0]
         new_state[1] = state[1]
         new_state[2] = state[3]*dt+state[2]
-        new_state[3] = state[2]
+        new_state[3] = state[3]
         new_state[4] = state[5]*dt+state[4]
         new_state[5] = state[5]
         return new_state
