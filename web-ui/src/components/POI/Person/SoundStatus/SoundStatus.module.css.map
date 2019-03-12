@@ -1,7 +1,0 @@
-{
-"version": 3,
-"mappings": "AAAA,OAAO;EACH,KAAK,EAAE,IAAI;EACX,MAAM,EAAE,IAAI;;AAGhB,gBAAgB;EACZ,WAAW,EAAE,GAAG;EAChB,YAAY,EAAE,GAAG;EACjB,MAAM,EAAE,IAAI;EACZ,KAAK,EAAE,OAAO",
-"sources": ["SoundStatus.module.scss"],
-"names": [],
-"file": "SoundStatus.module.css"
-}
