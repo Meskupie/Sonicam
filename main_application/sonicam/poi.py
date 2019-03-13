@@ -18,7 +18,7 @@ class POIManager():
         for track in tracks:
             # Record all ids being tracked
             poi_id = track.track_id
-            logging.info('Update POI with ID '+str(poi_id))
+            logging.debug('Update POI with ID '+str(poi_id))
             track_ids.append(poi_id)
             assert str(poi_id) in self.poi_dict
 
@@ -44,12 +44,12 @@ class POIManager():
             poi_id = track.track_id
             state = track.location_meas
             if str(poi_id) in self.poi_dict:
-                logging.info('Old POI with ID '+str(poi_id))
+                logging.debug('Old POI with ID '+str(poi_id))
                 if self.poi_dict[str(poi_id)].thumbnailStale():
                     thumbnail = POIManager.encodeFrame(POIManager.headshotFromState(state,frame_past))
                     self.poi_dict[str(poi_id)].updateThumbnail(thumbnail)
             else:
-                logging.info('New POI with ID '+str(poi_id))
+                logging.debug('New POI with ID '+str(poi_id))
                 thumbnail = POIManager.encodeFrame(POIManager.headshotFromState(state,frame_past))
                 self.poi_dict[str(poi_id)] = POI(poi_id,thumbnail)
 

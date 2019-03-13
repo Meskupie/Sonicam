@@ -171,8 +171,8 @@ class Tracker():
                 self.track_filters[link].measureUpdate(time,measure[i])
                 self.track_filters[link].location_meas = measure_transformed[i]
                 
-        for track in self.track_filters:
-            logging.info('Track '+str(track.track_id)+': '+str(max(track.uncertainty_meas)))
+        #for track in self.track_filters:
+        #    logging.info('Track '+str(track.track_id)+': '+str(max(track.uncertainty_meas)))
     
     def getEstimation(self):
         estimation = []

@@ -84,7 +84,7 @@ param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 # Webserver
 param_output_every = 2
 
-param_output_style = 'feeds'
+param_output_style = 'full'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 
