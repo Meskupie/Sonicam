@@ -51,6 +51,7 @@ class NewPerson extends Component {
                     widthHeight={this.props.widthHeight}
                     imgWidthHeight={this.props.imageWidthHeight}
                     imgSource={image}
+                    onClick={(event) => this.props.newPOIClickedHander(event, POI.id)}
                 />
             );
         });

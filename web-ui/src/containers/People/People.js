@@ -41,7 +41,7 @@ class People extends Component {
             }
 
             //if (selectedPOI.position[0] === x && selectedPOI.position[1] === y && this.props.shouldRefresh === true) {
-            if (selectedPOI.position[0] === x && selectedPOI.position[1] === y) {
+            if (selectedPOI !== null && selectedPOI !== undefined && selectedPOI.position[0] === x && selectedPOI.position[1] === y) {
                 isSelected = true;
                 selectPosX = posX;
                 selectPosY = posY;
@@ -82,6 +82,7 @@ class People extends Component {
                         volumeState={POI.soundStatus}
                         onClick={(event) => this.props.onPOIClick(event, POI.id)}
                         onMouseUp={(event) => this.props.onPOIMouseUp(event)}
+                        onMouseOut={(event) => this.props.onPOIMouseOut(event)}
                         onDoubleClick={(event) => this.props.onPOIDoubleClick(event, POI.id)}
                         imgSource={image}
                         borderWidth={borderWidth}

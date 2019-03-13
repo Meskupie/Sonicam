@@ -26,6 +26,9 @@ class Settings extends PureComponent {
 
         let sourceList = this.props.sources.map(source => {
 
+            let StatusPlayClass = [classes.Play]
+            let StatusSpinnerClass = [classes.Spinner]
+
             if (x < numSources) {
                 var line =
                     <hr className={classes.SourceBreak}>
@@ -33,29 +36,15 @@ class Settings extends PureComponent {
             }
 
             if(source.id === this.props.selectedSource){
-                status=
-                <div className={classes.StatusContainer}>    
-                    <svg className={classes.SpinnerBackground} width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
-                        <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-                            <g id="Playing-Symbol" stroke="#25266c" strokeWidth="2.5">
-                                <circle id="Oval" cx="10" cy="10" r="8.75"></circle>
-                            </g>
-                        </g>
-                    </svg>
-                    <svg className={classes.Spinner} width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
-                        <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-                            <g id="Playing-Symbol" strokeWidth="2.5">
-                                <circle id="Oval" strokeOpacity="0" stroke="#25266c" cx="10" cy="10" r="8.75"></circle>
-                                <path d="M10,1.25 C5.16750844,1.25 1.25,5.16750844 1.25,10" id="Path" stroke="#21F8B6" strokeLinecap="round"></path>
-                            </g>
-                        </g>
-                    </svg>
-                </div>
+                StatusPlayClass.push(classes.Hidden);
             }
             else{
-                status=
-                <div className={classes.StatusContainer}>
-                    <svg className={classes.Play} width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+                StatusSpinnerClass.push(classes.Hidden);
+            }
+
+            status=
+                <div className={classes.StatusContainer}>    
+                    <svg className={StatusPlayClass.join(' ')} width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
                         <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
                             <g id="Play-Symbol" stroke="#25266c">
                                 <circle id="Oval" strokeWidth="2.5" cx="10" cy="10" r="8.75"></circle>
@@ -63,13 +52,27 @@ class Settings extends PureComponent {
                             </g>
                         </g>
                     </svg>
+                    <svg className={classes.SpinnerBackground} width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+                        <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+                            <g id="Playing-Symbol" stroke="#25266c" strokeWidth="2.5">
+                                <circle id="Oval" cx="10" cy="10" r="8.75"></circle>
+                            </g>
+                        </g>
+                    </svg>
+                    <svg className={StatusSpinnerClass.join(' ')} width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+                        <g id="Symbols" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+                            <g id="Playing-Symbol" strokeWidth="2.5">
+                                <circle id="Oval" strokeOpacity="0" stroke="#25266c" cx="10" cy="10" r="8.75"></circle>
+                                <path d="M10,1.25 C5.16750844,1.25 1.25,5.16750844 1.25,10" id="Path" stroke="#21F8B6" strokeLinecap="round"></path>
+                            </g>
+                        </g>
+                    </svg> 
                 </div>
-            }
 
             x++;
 
             return (
-                <Aux>
+                <Aux key={source.id}>
                     <div style={sourceStyle} className={[classes.Source, classes.TextBackground].join(' ')} onClick={(event) => this.props.sourceClickedHandler(source.id)}>
                     {status}
                     {source.name}

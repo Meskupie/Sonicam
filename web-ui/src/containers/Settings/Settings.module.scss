@@ -8,16 +8,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2;
 }
 
 .Source{
     font-size: 17px;
     text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.16) !important;
     display: flex;
-}
-
-.SourceContainer{
-    
 }
 
 .SourceTitle{
@@ -35,11 +32,20 @@
 
 .Spinner, .SpinnerBackground, .Play{
     position: absolute;
+    transition: opacity 0.1s ease-in-out;
 }
 
 .Spinner{
     transform: rotate(90deg);
     animation: spin 2s linear infinite;
+}
+
+.Play{
+    opacity: 1;
+}
+
+.Hidden{
+    opacity: 0;
 }
 
 .StatusContainer{

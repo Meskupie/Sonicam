@@ -13,17 +13,20 @@
 .Image{
     background-color: #32338B;
     transition: filter 0.3s ease-in-out, transform 0.3s ease-in-out;
+    user-select: none;
 }
 
 .DeleteIcon{
     position: absolute;
     z-index: 1;
     filter: drop-shadow(0px 0px 25px black);
+    user-select: none;
 }
 
 .Background{
     border-radius: 50%;
     background-image: $gradient;
+    user-select: none;
 }
 
 .Parent{
@@ -31,6 +34,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    user-select: none;
 }
 
 .Lost{

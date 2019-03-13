@@ -22,11 +22,19 @@ class Layout extends Component {
             height: this.props.buttonHeight
         }
 
+        let userVolume = null;
+
+        const POI = this.props.POIs.find(x => x.id === this.props.selectedPOI)
+        
+        if(POI !== null && POI !== undefined){
+            userVolume = POI.volumeMultiplier
+        }
+
         return (
             <div className={classes.Layout} style={buttonContainerStyle}>
                 <UserVolumeButton 
                     params={buttonParameters} 
-                    volume={(this.props.userVolume)}
+                    volume={userVolume}
                     clickedPlus={(event) => this.props.userVolumeMouseDownHandler(event, 'up')}
                     clickedMinus={(event) => this.props.userVolumeMouseDownHandler(event, 'down')}
                     onMouseUpOrOut={(event) => this.props.userVolumeMouseUpOrOutHandler(event)}/>

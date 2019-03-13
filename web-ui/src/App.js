@@ -10,6 +10,8 @@ const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
 //pixels with stetching instead of 480
 const APP_HEIGHT = 451;
+const ROWS = 2;
+const COLUMNS = 4;
 const WIDTH_HEIGHT = 150;
 const IMAGE_WIDTH_HEIGHT = 115;
 const VOLUME_WIDTH = 12;
@@ -54,7 +56,7 @@ class App extends Component {
           importance: 2,
           name: "Name",
           mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeMultiplier: (1).toFixed(2),
           volumeNormalizer: Math.random() * .3,
           position: [2, 2],
           soundStatus: "normal"
@@ -106,42 +108,6 @@ class App extends Component {
           volumeNormalizer: Math.random() * .3,
           position: [1, 2],
           soundStatus: "normal"
-        },
-        {
-          id: 6,
-          is_visible: null,
-          is_known: null,
-          importance: 9,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: null,
-          soundStatus: "normal"
-        },
-        {
-          id: 7,
-          is_visible: null,
-          is_known: null,
-          importance: 8,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: null,
-          soundStatus: "normal"
-        },
-        {
-          id: 8,
-          is_visible: null,
-          is_known: null,
-          importance: 1,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: null,
-          soundStatus: "normal"
         }],
       selectedSource: "camera",
       sources: [
@@ -159,9 +125,11 @@ class App extends Component {
         }
       ]
     };
+  }
+
+  componentDidMount() {
     getVideoFeed((err, image) => {
       let parsedImage = JSON.parse(image);
-      //This needs to change.  Setting state in constructor can lead to bad behaviour
       this.setState({ parsedImage });
     });
   }
@@ -197,13 +165,11 @@ class App extends Component {
     if (upOrDown === 'up') {
       if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) < 3) {
         POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .01).toFixed(2);
-        console.log("up " + POI.volumeMultiplier);
       }
     }
     else if (upOrDown === 'down') {
       if (POI.volumeMultiplier - .01 > 0) {
         POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .01).toFixed(2);
-        console.log("down " + POI.volumeMultiplier);
       }
     }
 
@@ -225,15 +191,13 @@ class App extends Component {
     }
 
     if (upOrDown === 'up') {
-      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) < 3) {
-        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .01).toFixed(2);
-        console.log("up " + POI.volumeMultiplier);
+      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) + .02 <= 3) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .02).toFixed(2);
       }
     }
     else if (upOrDown === 'down') {
-      if (POI.volumeMultiplier - .01 > 0) {
-        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .01).toFixed(2);
-        console.log("down " + POI.volumeMultiplier);
+      if (POI.volumeMultiplier - .02 > 0) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .02).toFixed(2);
       }
     }
 
@@ -242,7 +206,7 @@ class App extends Component {
 
     this.setState({ POIs: POIs });
 
-    if (delay >= 40) {
+    if (delay >= 50) {
       delay *= 0.90;
     }
 
@@ -264,10 +228,73 @@ class App extends Component {
     this.setState({ selectedSource: selectedId });
   }
 
-  POIClickHandler = (event, selectedId) => {
+  newPOIClickedHander = (event, selectedId) => {
+    console.log("selected POI: " + selectedId);
+  }
+
+  POIMouseDownHandler = (event, selectedId) => {
     event.stopPropagation();
     this.setState({ selectedPOI: selectedId });
-    console.log("POI clicked")
+
+    //delete POI handler
+    if (this.state.POIHeld === selectedId) {
+      const POIs = [...this.state.POIs];
+
+      POIs.sort(function (a, b) {
+        return a.position[0] * Math.pow(a.position[1], 3) - b.position[0] * Math.pow(b.position[1], 3)
+      });
+
+      const personIndex = POIs.findIndex(x => x.id === selectedId);
+
+      const POI = {
+        ...POIs[personIndex]
+      }
+
+      POIs.splice(personIndex, 1)
+
+      for (let i = personIndex; i < POIs.length; i++) {
+        POIs[i].position[0] = POIs[i].position[0] - 1;
+        if (POIs[i].position[0] === 0) {
+          if (POIs[i].position[1] == 1) {
+
+          }
+          else {
+            POIs[i].position[1] = POIs[i].position[1] - 1;
+            POIs[i].position[0] = 4;
+          }
+        }
+      }
+
+      this.setState({selectedPOI: "background"})
+      //If position exists then move up all the POIs after the one deleted
+      //   if (POIs[i].position !== null && (POI.position[0] * Math.pow(POI.position[1], 2)) < (POIs[i].position[0] * Math.pow(POIs[i].position[1], 2))) {
+      //     console.log(POI.position + " < " + POIs[i].position + " : " + (POI.position[0] * (POI.position[1] ^ 2)) + " < " + (POIs[i].position[0] * (POIs[i].position[1] ^ 2)));
+      //     POIs[i].position[0] = POIs[i].position[0] - 1;
+      //     if (POIs[i].position[0] === 0) {
+      //       if (POIs[i].position[1] == 1) {
+
+      //       }
+      //       else {
+      //         POIs[i].position[1] = POIs[i].position[1] - 1;
+      //         POIs[i].position[0] = 4;
+      //       }
+      //     }
+      //     if(POI.position[0] === POIs[i].position[0] && POI.position[1] === POIs[i].position[1]){
+      //       this.setState({ selectedPOI: POIs[i].id });
+      //     }
+      //   }
+      // }
+
+      this.setState({ POIs: POIs });
+
+      if (this.state.selectedPOI === POI.id) {
+        // this.state.selectedPOI
+      }
+
+    }
+
+
+
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: null });
     this.setState({ displaySettings: false });
@@ -300,6 +327,12 @@ class App extends Component {
 
   POIMouseUpHandler = (event) => {
     console.log('POI released');
+    clearTimeout(holdPOIOrBackground);
+    this.setState({ POIClicked: false });
+  }
+
+  POIMouseOutHandler = (event) => {
+    console.log("POI mouse out");
     clearTimeout(holdPOIOrBackground);
     this.setState({ POIClicked: false });
   }
@@ -371,6 +404,7 @@ class App extends Component {
           imageWidthHeight={IMAGE_WIDTH_HEIGHT}
           row={2}
           state={this.state}
+          newPOIClickedHander={this.newPOIClickedHander}
         //A list of new people needs to be passed in
         />
     }
@@ -388,6 +422,7 @@ class App extends Component {
           imageWidthHeight={IMAGE_WIDTH_HEIGHT}
           row={row}
           state={this.state}
+          newPOIClickedHander={this.newPOIClickedHander}
         //A list of new people needs to be passed in
         />
     }
@@ -402,7 +437,8 @@ class App extends Component {
           buttonLargeWidth={BUTTON_LARGE_WIDTH}
           masterVolumeChangeHandler={this.masterVolumeChangeHandler}
           masterVolume={this.state.masterVolume}
-          userVolume={this.state.POIs.find(x => x.id === this.state.selectedPOI).volumeMultiplier}
+          POIs={this.state.POIs}
+          selectedPOI={this.state.selectedPOI}
           userVolumeMouseDownHandler={this.userVolumeMouseDownHandler}
           userVolumeMouseUpOrOutHandler={this.userVolumeMouseUpOrOutHandler}
           settingsButtonClickedHandler={this.settingsButtonClickedHandler}
@@ -417,7 +453,8 @@ class App extends Component {
           imageWidthHeight={IMAGE_WIDTH_HEIGHT}
           volumeWidth={VOLUME_WIDTH}
           state={this.state}
-          onPOIClick={this.POIClickHandler}
+          onPOIClick={this.POIMouseDownHandler}
+          onPOIMouseOut={this.POIMouseOutHandler}
           onPOIDoubleClick={this.POIDoubleClickHandler}
           onBackgroundMouseDown={this.backgroundMouseDownHandler}
           onBackgroundMouseUp={this.backgroundMouseUpHandler}
