@@ -21,9 +21,10 @@ const person = (props) => {
     }
 
     if(!props.shouldRefresh && !props.isHeld){
-        TextStatusContainerStyle={
-            opacity: "0"
-        }
+        // For debugging ONLY.  Uncomment this later
+        // TextStatusContainerStyle={
+        //     opacity: "0"
+        // }
     }
 
     let volume = null;

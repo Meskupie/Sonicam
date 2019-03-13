@@ -56,6 +56,7 @@ class POIManager():
     def updateFromUIChange(self,response):
         response_ids = []
         for poi in response:
+            logging.info('==POST=='+str(poi))
             poi_id = poi['id']
             if poi_id == -1:
                 self.background.mute = poi['mute']
@@ -83,6 +84,7 @@ class POIManager():
         output_list = []
         for key,value in self.poi_dict.items():
             output_list.append(value.getInfo())
+            logging.info('==GET==='+str(value.getInfo()))
             # Put a lock on deletion from missing track
             value.is_shown = True
         return output_list
@@ -91,6 +93,7 @@ class POIManager():
         output_list = []
         for key,value in self.poi_dict.items():
             output_list.append(value.getInfoVerbose())
+            logging.info('==GET==='+str(value.getInfo()))
             # Put a lock on deletion from missing track
             value.is_shown = True
         return output_list
@@ -159,7 +162,7 @@ class POI():
         self.is_known = False
         self.feed = None
 
-        self.thumbnail = {'id':self.poi_id,'thumbnail':thumbnail}
+        self.thumbnail = {'id':self.poi_id,'frame':thumbnail}
         self.thumbnail_time = 0
 
         self.name = None
@@ -169,7 +172,7 @@ class POI():
         return {'id':self.poi_id,'state':self.getState(),'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height}
 
     def getInfoVerbose(self):
-        return {'id':self.poi_id,'state':self.getState(),'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height,'frame':thumbnail['frame']}
+        return {'id':self.poi_id,'state':self.getState(),'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height,'frame':self.thumbnail['frame']}
 
     def getAudio(self):
         pass

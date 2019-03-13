@@ -4,7 +4,8 @@ import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
 import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
-import { getVideoFeed } from './hoc/GetVideoFeed/GetVideoFeed';
+import { getVideoFeed } from './Functions/GetVideoFeed/GetVideoFeed';
+import { httpPost } from './Functions/HttpPost/HttpPost';
 
 const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
@@ -28,8 +29,9 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedPOI: "background",
+      selectedPOI: -1,
       masterVolume: 1,
+      refreshNewPersonList: false,
       backgroundClicked: false,
       backgroundHeld: false,
       copyParsedImage: null,
@@ -38,75 +40,16 @@ class App extends Component {
       displaySettings: false,
       POIs: [
         {
-          id: "background",
+          id: -1,
+          height: null,
           is_visible: null,
           is_known: null,
           importance: null,
           name: "Background",
           mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
+          volumeMultiplier: (1).toFixed(2),
           volumeNormalizer: 0,
           position: [1, 1],
-          soundStatus: "normal"
-        },
-        {
-          id: 5,
-          is_visible: null,
-          is_known: null,
-          importance: 2,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (1).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: [2, 2],
-          soundStatus: "normal"
-        },
-        {
-          id: 0,
-          is_visible: null,
-          is_known: null,
-          importance: 4,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: [2, 1],
-          soundStatus: "normal"
-        },
-        {
-          id: 1,
-          is_visible: null,
-          is_known: null,
-          importance: 5,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: [3, 1],
-          soundStatus: "normal"
-        },
-        {
-          id: 2,
-          is_visible: null,
-          is_known: null,
-          importance: 11,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: [4, 1],
-          soundStatus: "normal"
-        },
-        {
-          id: 3,
-          is_visible: null,
-          is_known: null,
-          importance: 6,
-          name: "Name",
-          mute: false,
-          volumeMultiplier: (.5 + Math.random() * .7).toFixed(2),
-          volumeNormalizer: Math.random() * .3,
-          position: [1, 2],
           soundStatus: "normal"
         }],
       selectedSource: "camera",
@@ -128,10 +71,6 @@ class App extends Component {
   }
 
   componentDidMount() {
-    getVideoFeed((err, image) => {
-      let parsedImage = JSON.parse(image);
-      this.setState({ parsedImage });
-    });
   }
 
   masterVolumeChangeHandler = (event) => {
@@ -228,8 +167,76 @@ class App extends Component {
     this.setState({ selectedSource: selectedId });
   }
 
-  newPOIClickedHander = (event, selectedId) => {
-    console.log("selected POI: " + selectedId);
+  newPOIClickedHander = (event, selectedPOI) => {
+    const POIs = [...this.state.POIs];
+
+    POIs.sort(function (a, b) {
+      return a.position[0] * Math.pow(a.position[1], 3) - b.position[0] * Math.pow(b.position[1], 3)
+    });
+
+
+    for (let i = 0; i < POIs.length; i++) {
+      if (POIs[i].id === selectedPOI.id) {
+        return null;
+      }
+    }
+
+    //if POI is being edited (POI was held)
+    if (this.state.POIHeld !== null) {
+      const POIHeldIndex = this.state.POIs.findIndex(x => x.id === this.state.POIHeld);
+      POIs[POIHeldIndex].id = selectedPOI.id;
+      this.setState({ POIHeld: null });
+    }
+    //If new POI is being added
+    else {
+      const lastPOI = POIs[POIs.length - 1];
+
+      let posX = lastPOI.position[0];
+      let posY = lastPOI.position[1];
+
+      posX++;
+
+      if (posX > 4) {
+        posX = 1;
+        posY++;
+      }
+
+      selectedPOI.position = [];
+      selectedPOI.position[0] = posX;
+      selectedPOI.position[1] = posY;
+      selectedPOI.volumeMultiplier = (1).toFixed(2);
+      selectedPOI.volumeNormalizer = 0;
+      selectedPOI.soundStatus = "normal";
+      selectedPOI.mute = true;
+
+
+      POIs.push(selectedPOI);
+    }
+
+    let postPOIs = POIs.map(POI => {
+      return (
+        {
+          id: POI.id,
+          name: POI.name,
+          height: POI.height,
+          mute: POI.mute,
+          volume: POI.volumeMultiplier
+        }
+      )
+    })
+
+    httpPost(postPOIs, '/api/pois/');
+
+    this.setState({ POIs: POIs });
+
+    getVideoFeed((err, feeds) => {
+      
+      let parsedImage = JSON.parse(feeds);
+      this.setState({ parsedImage });
+    });
+
+    const refreshNewPersonListTemp = !this.state.refreshNewPersonList;
+    this.setState({ refreshNewPersonList: refreshNewPersonListTemp });
   }
 
   POIMouseDownHandler = (event, selectedId) => {
@@ -265,40 +272,29 @@ class App extends Component {
         }
       }
 
-      this.setState({selectedPOI: "background"})
-      //If position exists then move up all the POIs after the one deleted
-      //   if (POIs[i].position !== null && (POI.position[0] * Math.pow(POI.position[1], 2)) < (POIs[i].position[0] * Math.pow(POIs[i].position[1], 2))) {
-      //     console.log(POI.position + " < " + POIs[i].position + " : " + (POI.position[0] * (POI.position[1] ^ 2)) + " < " + (POIs[i].position[0] * (POIs[i].position[1] ^ 2)));
-      //     POIs[i].position[0] = POIs[i].position[0] - 1;
-      //     if (POIs[i].position[0] === 0) {
-      //       if (POIs[i].position[1] == 1) {
-
-      //       }
-      //       else {
-      //         POIs[i].position[1] = POIs[i].position[1] - 1;
-      //         POIs[i].position[0] = 4;
-      //       }
-      //     }
-      //     if(POI.position[0] === POIs[i].position[0] && POI.position[1] === POIs[i].position[1]){
-      //       this.setState({ selectedPOI: POIs[i].id });
-      //     }
-      //   }
-      // }
-
+      this.setState({ selectedPOI: -1 });
       this.setState({ POIs: POIs });
-
-      if (this.state.selectedPOI === POI.id) {
-        // this.state.selectedPOI
-      }
-
     }
-
-
 
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: null });
     this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
+
+    var postPOIs = this.state.POIs.map(POI => {
+      return (
+        {
+          id: POI.id,
+          name: POI.name,
+          height: POI.height,
+          mute: POI.mute,
+          volume: POI.volumeMultiplier
+        }
+      )
+    })
+
+    httpPost(postPOIs, '/api/pois/');
+
     holdPOIOrBackground = setTimeout(() => { this.POIHeldHandler(selectedId) }, 400);
   }
 
@@ -322,7 +318,6 @@ class App extends Component {
     POIs[personIndex] = POI;
 
     this.setState({ POIs: POIs });
-
   }
 
   POIMouseUpHandler = (event) => {
@@ -339,7 +334,7 @@ class App extends Component {
 
   POIHeldHandler(selectedId) {
     console.log('POI with id ' + selectedId + ' held');
-    if (selectedId !== "background") {
+    if (selectedId !== -1) {
       this.setState({ POIHeld: selectedId });
       this.setState({ copyParsedImage: this.state.parsedImage });
     }
@@ -351,6 +346,20 @@ class App extends Component {
     this.setState({ POIHeld: null });
     this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
+
+    var postPOIs = this.state.POIs.map(POI => {
+      return (
+        {
+          id: POI.id,
+          name: POI.name,
+          height: POI.height,
+          mute: POI.mute,
+          volume: POI.volumeMultiplier
+        }
+      )
+    })
+    httpPost(postPOIs, '/api/pois/');
+
     holdPOIOrBackground = setTimeout(() => { this.backgroundHeldHandler() }, 400);
   }
 
@@ -395,6 +404,7 @@ class App extends Component {
     if (this.state.backgroundHeld) {
       addPerson =
         <NewPerson
+          key={this.state.refreshNewPersonList}
           appWidth={APP_WIDTH}
           offsetTop={SPACING_UI * 2 + BUTTON_HEIGHT}
           offsetLeft={SPACING_UI}
@@ -409,10 +419,12 @@ class App extends Component {
         />
     }
     else if (this.state.POIHeld !== null) {
+      console.log(this.state.POIs);
       var POI = this.state.POIs.find(x => x.id === this.state.POIHeld);
       var row = (POI.position[1] % 2) + 1;
       addPerson =
         <NewPerson
+          key={this.state.refreshNewPersonList}
           appWidth={APP_WIDTH}
           offsetTop={SPACING_UI * 2 + BUTTON_HEIGHT}
           offsetLeft={SPACING_UI}

@@ -20,10 +20,10 @@ class People extends Component {
         }
 
         let persons = this.props.state.POIs.map(POI => {
-            if(POI.position === null){
+            if (POI.position === null) {
                 return null;
             }
-            
+
             let x = POI.position[0];
             let y = POI.position[1];
             let isBackground = null;
@@ -36,7 +36,7 @@ class People extends Component {
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
             let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1);
 
-            if(POI.id === "background"){
+            if (POI.id === -1) {
                 isBackground = true;
             }
 
@@ -57,14 +57,16 @@ class People extends Component {
 
             let image = " ";
 
-            if (POI.id !== "background" && this.props.state.parsedImage !== undefined && this.props.state.parsedImage[POI.id] !== undefined && this.props.shouldRefresh) {
-                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.parsedImage[POI.id].image;
+            if (POI.id !== -1 && this.props.state.parsedImage !== undefined && this.props.shouldRefresh) {
+                let sourceImage = this.props.state.parsedImage.find(x => x.id === POI.id);
+                image = "data:image/jpeg;charset=utf-8;base64," + sourceImage.frame;
             }
-            else if(POI.id !== "background" && this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && this.props.state.copyParsedImage[POI.id] !== undefined  && !this.props.shouldRefresh){
-                image = "data:image/jpeg;charset=utf-8;base64," + this.props.state.copyParsedImage[POI.id].image;
+            else if (POI.id !== -1 && this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && !this.props.shouldRefresh) {
+                let sourceImage = this.props.state.copyParsedImage.find(x => x.id === POI.id);
+                image = "data:image/jpeg;charset=utf-8;base64," + sourceImage.frame;
             }
             // //This removes POI's if they do not have video feed.  This should not be perminant
-            // else if(POI.id !== "background"){
+            // else if(POI.id !== -1){
             //     return null;
             // }
 
@@ -87,7 +89,7 @@ class People extends Component {
                         imgSource={image}
                         borderWidth={borderWidth}
                         isBackground={isBackground}
-                        name={POI.name}
+                        name={POI.id}
                         isSelected={isSelected}
                         shouldRefresh={this.props.shouldRefresh}
                         isHeld={POI.id === this.props.POIHeld}

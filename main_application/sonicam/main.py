@@ -96,7 +96,7 @@ def emitFullFrame(frame_raw,tracks):
 
     ret, frame_encoded = cv2.imencode('.jpg',frame)
     frame_string = base64.b64encode(frame_encoded).decode('utf8')
-    socket.emit('frame',frame_string)
+    socket.emit('frame',json.dumps(frame_string))
 
 def emitFeeds(feeds):    
     socket.emit('feeds',json.dumps(feeds))
