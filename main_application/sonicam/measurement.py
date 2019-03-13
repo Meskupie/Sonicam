@@ -169,6 +169,7 @@ class Tracker():
                 self.track_filters.append(new_track)
             else: # Measure update the tracker
                 self.track_filters[link].measureUpdate(time,measure[i])
+                self.track_filters[link].location_meas = measure_transformed[i]
                 
         for track in self.track_filters:
             logging.info('Track '+str(track.track_id)+': '+str(max(track.uncertainty_meas)))
@@ -272,6 +273,7 @@ class EKF():
         
         self.location = self.getLocation()
         self.uncertainty = self.getUncertainty()
+        self.location_meas = self.getLocation()
         self.uncertainty_meas = self.getUncertainty()
     
     def predictionUpdate(self,time):

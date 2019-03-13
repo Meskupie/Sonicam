@@ -84,14 +84,20 @@ param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 # Webserver
 param_output_every = 2
 
-param_output_style = 'thumbnails' #'full'
+param_output_style = 'feeds'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 
-param_thumbnail_count = 10
-param_thumbnail_shape = (115,115,3)
-param_thumbnail_scale = 3
-param_thumbnail_background = [139,51,50] #32338B, rgb: 50,51,139
+param_headfeed_count = 10
+param_headfeed_shape = (115,115,3)
+param_headfeed_scale = 3
+param_headfeed_background = [139,51,50] #32338B, rgb: 50,51,139
+
+# param_thumbnail_count = 10
+# param_thumbnail_shape = (115,115,3)
+# param_thumbnail_scale = 1.5
+# param_thumbnail_background = [139,51,50] #32338B, rgb: 50,51,139
+param_thumbnail_stale = 5
 
 # Shared
 shared_vars = {}

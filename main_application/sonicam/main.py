@@ -14,7 +14,7 @@ import multiprocessing as mp
 from queue import Empty
 import eventlet as e
 
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 
 # =============
@@ -38,6 +38,7 @@ install_mp_handler()
 from parameters import *
 from imaging import FrameServer
 from measurement import FaceDetector, Tracker
+from poi import POIManager
 from audio import Beamformer
 
 # =============
@@ -75,34 +76,14 @@ processes.append(FrameServer('FrameServer',param_src,queue_dict,shared_buffer_fr
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
 processes.append(Beamformer('Beamformer',queue_dict))
 
-
-# =============
-# Setup Flask
-# =============
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socket = SocketIO(app)#, logger=True, engineio_logger=True)
-
-@app.route('/')
-def index():
-    if param_output_style == 'thumbnails' or param_output_style == 'thumbnail_detections':
-        return render_template('index2.html')
-    elif param_output_style == 'full' or param_output_style == 'thumbnail':
-        return render_template('index.html')
-
-
 # =============
 # Main application logic
 # =============
 tracker = Tracker()
+poi_manager = POIManager()
     
-def sendBeamformer():
+def emitBeamformer():
     pass
-
-def encodeFrame(frame):
-    ret, frame_encoded = cv2.imencode('.jpg',frame)
-    frame_string = base64.b64encode(frame_encoded).decode('utf8')
-    return frame_string
     
 def emitFullFrame(frame_raw,tracks):
     frame = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
@@ -113,50 +94,12 @@ def emitFullFrame(frame_raw,tracks):
         bb = [int(round(x*scale)) for x in bb]
         cv2.rectangle(frame,(bb[0], bb[1]),(bb[0]+bb[2], bb[1] + bb[3]),(0,155,255),1)
 
-    frame_string = encodeFrame(frame)
+    ret, frame_encoded = cv2.imencode('.jpg',frame)
+    frame_string = base64.b64encode(frame_encoded).decode('utf8')
     socket.emit('frame',frame_string)
 
-def emitThumbnails(frame_raw,tracks):
-    output_list = []
-    for track in tracks:
-        # Create an array of corners
-        state = track.location
-        bb = Tracker.boundingBoxFromState(state,scale=param_thumbnail_scale)
-        c = np.zeros(4,dtype=int)
-        c[0] = bb[0]
-        c[1] = bb[1]
-        c[2] = bb[0]+bb[2]
-        c[3] = bb[1]+bb[3]
-        
-        # Caluclate indexs in the thumbnail that the scaled video will occupy.
-        # Fill remaining area with specified colour
-        nx = np.zeros(2,dtype=int)
-        nx[0] = int(round(param_thumbnail_shape[0]*((max(c[0],0)-c[0])/(c[2]-c[0]))))
-        nx[1] = int(param_thumbnail_shape[0]-round(param_thumbnail_shape[0]*((c[2]-min(c[2],1920))/(c[2]-c[0]))))
-        ny = np.zeros(2,dtype=int)
-        ny[0] = int(round(param_thumbnail_shape[1]*((max(c[1],0)-c[1])/(c[3]-c[1]))))
-        ny[1] = int(param_thumbnail_shape[0]-round(param_thumbnail_shape[1]*((c[3]-min(c[3],1080))/(c[3]-c[1]))))
-        output_shape = (nx[1]-nx[0],ny[1]-ny[0])
-        input_shape = frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:].shape
-        
-        # Just sanity checking that I am leaving in
-        if output_shape[0] == 0 or output_shape[1] == 0:
-            logging.warning('Skipping thumbnail with output shape: '+str(output_shape))
-            continue
-        if input_shape[0] == 0 or input_shape[1] == 0 or input_shape[2] == 0:
-            logging.warning('Skipping thumbnail with input shape: '+str(input_shape))
-            continue
-        
-        # Apply backgound color
-        out = np.array([[param_thumbnail_background]],dtype=np.uint8)
-        out = np.repeat(out,param_thumbnail_shape[0],axis=0)
-        out = np.repeat(out,param_thumbnail_shape[0],axis=1)
-        # Add thumbnail to array
-        out[ny[0]:ny[1],nx[0]:nx[1],:] = cv2.resize(frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:],output_shape,interpolation = cv2.INTER_AREA)
-        
-        output_list.append({'id':track.track_id,'image':encodeFrame(out)})
-    
-    socket.emit('thumbnails',json.dumps(output_list))
+def emitFeeds(feeds):    
+    socket.emit('feeds',json.dumps(feeds))
 
 def spinServiceJobs(flag,job_queue):
     time_last = 0
@@ -174,22 +117,21 @@ def spinServiceJobs(flag,job_queue):
                     if running_chain == False:
                         running_chain = True
                         run_detection = True
-                        
-                    tracker.predictionUpdate(job['frame_time'])
                     
-                    if job['buffer_index']%param_output_every == 0:
-                        if param_output_style == 'full':
-                            emitFullFrame(shared_buffer_frames[job['buffer_index']][1],tracker.track_filters)
-                        elif param_output_style == 'thumbnails':
-                            emitThumbnails(shared_buffer_frames[job['buffer_index']][1],tracker.track_filters)
-                    
-                    # Output to beamformer
-                    #angle = getAngle(estimation)
-                    #queue_dict['beamformer'].put({'type':'angle','angle':angle})
-                    
+                    # Start next detection
                     if run_detection:
                         run_detection = False
                         queue_dict['face_detector'].put({'type':'detect'})
+
+                    tracker.predictionUpdate(job['frame_time'])
+
+                    if job['buffer_index']%param_output_every == 0:
+                        poi_manager.updateFromTracker(tracker.track_filters,shared_buffer_frames[job['buffer_index']][1])
+                        
+                        if param_output_style == 'full':
+                            emitFullFrame(shared_buffer_frames[job['buffer_index']][1],tracker.track_filters)
+                        elif param_output_style == 'feeds':
+                            emitFeeds(poi_manager.getFeeds())
                     
                 elif job['type'] == 'face_results':
                     # Record the frame rate
@@ -202,15 +144,19 @@ def spinServiceJobs(flag,job_queue):
                         assert job['buffer_index'] == None
                     time_last = time_now
                     
-                    # Run measurement update on face results
-                    tracker.measurementUpdate(job['frame_time'],job['results'])
-                    
-                    # Unlock frame
                     if job['buffer_index'] != None:
+                        # Run measurement update on face results
+                        tracker.measurementUpdate(job['frame_time'],job['results'])
+
+                        # Update POI thumbnails as well as updateing tracks
+                        poi_manager.updateFromDetection(tracker.track_filters,shared_buffer_frames[job['buffer_index']][1])
+                        
+                        # Unlock frame
                         queue_dict['frame_server'].put({'type':'unlock_frame','buffer_index':job['buffer_index']})
-                    
+                        
                     # Flag to run next detection
                     run_detection = True
+                
                 else:
                     logging.error('Unknown job type')
                     
@@ -242,6 +188,36 @@ def killSystem(flag,threads,processes):
             logging.warning('Killing Process: '+process.name)
             process.kill()
 
+# =============
+# Setup Flask
+# =============
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socket = SocketIO(app)#, logger=True, engineio_logger=True)
+
+@app.route('/')
+def index():
+    if param_output_style == 'feeds':
+        return render_template('index2.html')
+    elif param_output_style == 'full':
+        return render_template('index.html')
+
+@app.route('/api/pois/', methods=['GET','POST'])
+def poi_all_url():
+    if request.method == 'GET':
+        output = poi_manager.getPOIs()
+        return jsonify(output)
+    elif request.method == 'POST':
+        data = request.get_json()
+        logging.info(data)
+        return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    else:
+        logging.error('Unknown API call to /api/pois/ ('+str(request.method)+')')
+
+
+@app.route('/api/pois/<int:poi_id>')
+def poi_id_url(poi_id):
+    pass
 
 
 if __name__ == '__main__':
