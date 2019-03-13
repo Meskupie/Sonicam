@@ -203,17 +203,22 @@ def index():
         return render_template('index.html')
 
 @app.route('/api/pois/', methods=['GET','POST'])
-def poi_all_url():
+def poi_url():
     if request.method == 'GET':
         output = poi_manager.getPOIs()
         return jsonify(output)
     elif request.method == 'POST':
         data = request.get_json()
-        logging.info(data)
+        poi_manager.updateFromUIChange(data)
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     else:
         logging.error('Unknown API call to /api/pois/ ('+str(request.method)+')')
 
+@app.route('/api/poisverbose/')
+def poiverbose_url():
+    if request.method == 'GET':
+        output = poi_manager.getPOIsVerbose()
+        return jsonify(output)
 
 @app.route('/api/pois/<int:poi_id>')
 def poi_id_url(poi_id):

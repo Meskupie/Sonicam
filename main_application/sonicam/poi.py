@@ -11,6 +11,7 @@ from measurement import Tracker
 class POIManager():
     def __init__ (self):
         self.poi_dict = {}
+        self.background = POI(-1,None)
 
     def updateFromTracker(self,tracks,frame_raw):
         track_ids = []
@@ -46,12 +47,31 @@ class POIManager():
                 logging.info('Old POI with ID '+str(poi_id))
                 if self.poi_dict[str(poi_id)].thumbnailStale():
                     thumbnail = POIManager.encodeFrame(POIManager.headshotFromState(state,frame_past))
-                    #if len(thumbnail.shape) == 3:
                     self.poi_dict[str(poi_id)].updateThumbnail(thumbnail)
             else:
                 logging.info('New POI with ID '+str(poi_id))
                 thumbnail = POIManager.encodeFrame(POIManager.headshotFromState(state,frame_past))
                 self.poi_dict[str(poi_id)] = POI(poi_id,thumbnail)
+
+    def updateFromUIChange(self,response):
+        response_ids = []
+        for poi in response:
+            poi_id = poi['id']
+            if poi_id == -1:
+                self.background.mute = poi['mute']
+                self.background.volume = poi['volume']
+            else:
+                response_ids.append(poi_id)
+                self.poi_dict[str(poi_id)].mute = poi['mute']
+                self.poi_dict[str(poi_id)].volume = poi['volume']
+
+        # Update POIs that are no longer being tracked. Delete if not in UI, update shown flag
+        for key in list(self.poi_dict.keys()):
+            if self.poi_dict[key].poi_id not in response_ids:
+                if not self.poi_dict[key].is_visible:
+                    del self.poi_dict[key]
+                else:
+                    self.poi_dict[key].is_shown = False
 
     def getFeeds(self):
         output_list = []
@@ -63,6 +83,16 @@ class POIManager():
         output_list = []
         for key,value in self.poi_dict.items():
             output_list.append(value.getInfo())
+            # Put a lock on deletion from missing track
+            value.is_shown = True
+        return output_list
+
+    def getPOIsVerbose(self):
+        output_list = []
+        for key,value in self.poi_dict.items():
+            output_list.append(value.getInfoVerbose())
+            # Put a lock on deletion from missing track
+            value.is_shown = True
         return output_list
 
     def addPOI(self,poi_id,thumbnail):
@@ -136,7 +166,10 @@ class POI():
         self.height = None
 
     def getInfo(self):
-        return {'id':self.poi_id,'is_visible':self.is_visible,'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height}
+        return {'id':self.poi_id,'state':self.getState(),'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height}
+
+    def getInfoVerbose(self):
+        return {'id':self.poi_id,'state':self.getState(),'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height,'frame':thumbnail['frame']}
 
     def getAudio(self):
         pass
@@ -152,7 +185,7 @@ class POI():
 
     def updateThumbnail(self,thumbnail):
         self.thumbnail_time = time.time()
-        self.thumbnail = {'id':self.poi_id,'thumbnail':thumbnail}
+        self.thumbnail = {'id':self.poi_id,'frame':thumbnail}
 
     def updateFeed(self,headfeed):
         self.feed = {'id':self.poi_id,'frame':headfeed,'state':self.getState()}
