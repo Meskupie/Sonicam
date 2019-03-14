@@ -20,15 +20,15 @@ const person = (props) => {
         width: props.widthHeight + 'px',
     }
 
-    if(!props.shouldRefresh && !props.isHeld){
-        TextStatusContainerStyle={
+    if (!props.shouldRefresh && !props.isHeld) {
+        TextStatusContainerStyle = {
             opacity: "0"
         }
     }
 
     let volume = null;
 
-    if (props.volumeState != null) {
+    if (props.isNewPerson === false) {
         volume = (
             <Aux>
                 <Volume
@@ -59,7 +59,7 @@ const person = (props) => {
                     isMuted={props.isMuted}
                 />
             </Aux>
-            );
+        );
     }
 
     return (
@@ -84,15 +84,15 @@ const person = (props) => {
                 />
             </div>
             <div style={TextStatusContainerStyle} className={classes.TextStatusContainer}>
-            <Text
-                isSelected={props.isSelected}
-                name={props.name}
-                isHeld={props.isHeld}
-            />
-            <SoundStatus
-                status={props.volumeState}
-                isMuted={props.isMuted}
-            />
+                <Text
+                    isSelected={props.isSelected}
+                    name={props.name}
+                    isHeld={props.isHeld}
+                />
+                <SoundStatus
+                    status={props.volumeState}
+                    isMuted={props.isMuted}
+                />
             </div>
         </div>
     );
