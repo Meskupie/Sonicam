@@ -72,16 +72,61 @@ shared_pyramid_frames = [(raw_pyramid_arrays[i],np.frombuffer(raw_pyramid_arrays
 # Initialize processes
 # =============
 processes = []
-processes.append(FrameServer('FrameServer',param_src,queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames))
+processes.append(FrameServer('FrameServer',queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames))
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
 processes.append(Beamformer('Beamformer',queue_dict))
 
 # =============
-# Main application logic
+# Ready Control
+# =============
+ready_names = ['audio'] #AUDIO (remove defaut)
+ready_names_required = ['face','audio']
+def updateReady(name=None):
+    if name != None:
+        ready_names.append(name)
+    for n in ready_names_required:
+        if n not in ready_names:
+            return
+    socket.emit('state','ready')
+
+# =============
+# Loading Control
+# =============
+loaded_names = ['audio'] #AUDIO (remove defaut)
+loaded_names_required = ['camera','audio']
+def updateLoaded(name):
+    names.append(name)
+    for n in names_required:
+        if n not in names:
+            return
+    socket.emit('state','playing')
+    start_stream()
+    loaded_names = ['audio'] #AUDIO (remove defaut)
+
+# =============
+# Stream Control
+# =============
+def ended_stream():
+    socket.emit('state','eof')
+
+def stop_stream():
+    # AUDIO (stop signal)
+    queue_dict['frame_server'].put({'type':'stop'})
+
+def load_stream(file):
+    # AUDIO (load signal)
+    queue_dict['frame_server'].put({'type':'load','src':param_src_path+file+param_src_suffix})
+
+def start_stream():
+    # AUDIO (start signal)
+    queue_dict['frame_server'].put({'type':'start'})
+
+# =============
+# Main application
 # =============
 tracker = Tracker()
 poi_manager = POIManager()
-    
+
 def emitBeamformer():
     pass
     
@@ -113,7 +158,18 @@ def spinServiceJobs(flag,job_queue):
             e.sleep(1.0/param_flask_queue_spin_rate)
         else:
             try:
-                if job['type'] == 'new_frame':
+                if job['type'] == 'ready':
+                    if job['src'] == 'FaceDetector':
+                        updateReady('face')
+
+                elif job['type'] == 'loaded':
+                    if job['src'] == 'CameraReader':
+                        updateLoaded('camera')
+
+                elif job['type'] == 'eof':
+                    ended_stream()
+
+                elif job['type'] == 'new_frame':
                     if running_chain == False:
                         running_chain = True
                         run_detection = True
@@ -176,7 +232,6 @@ def waitForInput(running_flag,threads):
     
     socket.stop()
     
-    
 def killSystem(flag,threads,processes):
     if flag.value == 1:
         logging.warning('System terminating')
@@ -214,7 +269,7 @@ def poi_url():
     else:
         logging.error('Unknown API call to /api/pois/ ('+str(request.method)+')')
 
-@app.route('/api/pois/<int:poi_id>', methods=['GET','POST'])
+@app.route('/api/pois/<int:poi_id>/', methods=['GET','POST'])
 def poi_id_url(poi_id):
     if request.method == 'GET':
         output = poi_manager.getPOIs(specific=poi_id)
@@ -232,14 +287,39 @@ def poiverbose_url():
         output = poi_manager.getPOIs(verbose=True)
         return jsonify(output)
 
+@app.route('/api/files/', methods=['GET','POST'])
+def files_url():
+    if request.method == 'GET':
+        # Reset the currently running stream
+        stop_steam()
+        updateReady()
+        return jsonify(param_src_files)
+    elif request.method == 'POST':
+        file = request.get_json()
+        stop_stream()
+        load_stream(file)
+        return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    else:
+        logging.error('Unknown API call to /api/files ('+str(request.method)+')')
+
+@app.route('/api/audiostate/', methods=['POST'])
+def audiostate_url():
+    if request.method == 'POST':
+        data = request.get_json()
+        if data['state'] == 'ready':
+            updateReady('audio')
+        elif data['state'] == 'loaded':
+            updateLoaded('audio')
+        return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    else:
+        logging.error('Unknown API call to /api/audiostate ('+str(request.method)+')')
+
 
 if __name__ == '__main__':
     # ============================================
     # ===== INSERT MULTIPROCESSING WAIT HERE =====
     # time.sleep(20)
     # ============================================
-    queue_dict['frame_server'].put({'type':'start'})
-    
     running_flag = mp.Value(ctypes.c_ubyte)
     running_flag.value = 1
     

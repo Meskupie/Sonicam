@@ -64,6 +64,7 @@ class FaceDetector(mp.Process):
                 self.detector = Detector(sess,threshold=param_detector_thresholds,img_shape=param_frame_shape[0:2])
 
     def spinDetector(self):
+        self.master_queue.put({'type':'ready','src':self.name})
         while True:
             job = self.job_queue.get()
             try:

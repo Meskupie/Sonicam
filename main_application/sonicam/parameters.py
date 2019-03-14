@@ -10,12 +10,8 @@ param_jetson = 'sonicam' in os.uname()[1]
 # Common
 param_cam_fps = 30
 if param_jetson:
-    param_use_cam = False
-    param_flip_video = False
     param_use_gpu = True
 else:
-    param_use_cam = False
-    param_flip_video = True
     param_use_gpu = False
 
 # FrameServer
@@ -25,13 +21,18 @@ param_n_image_workers = 3
 param_image_buffer_end = 2
 param_frame_period = 1.0/param_cam_fps
 
-param_src_file = '../data/sample_video_very_easy.mp4'
+param_flip_video = True
+param_src_force = True
+param_src_file = -1
+param_src_video_path = '../data/'
+param_src_video_suffix = '.mp4'
+param_src_audio_path = ''
+param_src_audio_suffix = ''
+param_src_files = ['sample_video_very_easy','sample_video_easy']
 param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
         str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \
         "/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
         
-param_src = param_src_cam if param_use_cam else param_src_file
-
 # FaceDetector
 param_detector_thresholds = [0.8, 0.8, 0.8]
 

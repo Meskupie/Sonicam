@@ -10,6 +10,9 @@ from measurement import Tracker
 
 class POIManager():
     def __init__ (self):
+        self.reset()
+
+    def reset(self):
         self.poi_dict = {}
         self.background = POI(-1,None)
 

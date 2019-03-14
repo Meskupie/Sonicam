@@ -13,10 +13,9 @@ from parameters import *
 # ===================================
 class FrameServer(mp.Process):
     # Barebones initialization, pass shared data structures into the process and start it
-    def __init__(self,name,src,queues,buffer_frames,buffer_times,buffer_index,pyramid_frames):
+    def __init__(self,name,queues,buffer_frames,buffer_times,buffer_index,pyramid_frames):
         super(FrameServer, self).__init__()
         self.name = name
-        self.src = src
         
         # Grab references to linking data
         self.job_queue = queues['frame_server']
@@ -31,12 +30,14 @@ class FrameServer(mp.Process):
         
         # Start the Process
         self.start()
-    
+
     # Initialize all objects that are used in the video driver
     def initObjects(self):
-        # Event to signal stopping of all threads
-        self.run_event = mp.Event()
-        self.run_event.set()
+        # Events to signal stopping of all threads
+        self.run_workers = mp.Event()
+        self.run_workers.set()
+        self.run_camera = mp.Event()
+        self.run_camera.clear()
         
         # Initialize buffer index so that the first frame goes in index 0
         self.local_buffer_index = param_image_buffer_length-1
@@ -56,7 +57,7 @@ class FrameServer(mp.Process):
         self.image_processing_workers = []
         for i in range(param_n_image_workers):
             name = 'ImageWorker-'+str(i+1)+'of'+str(param_n_image_workers)
-            worker = ImageProcessingWorker(name,self.run_event,self.job_queue,self.image_job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'],shared_vars['pyramid_frames'])
+            worker = ImageProcessingWorker(name,self.run_workers,self.job_queue,self.image_job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'],shared_vars['pyramid_frames'])
             self.image_processing_workers.append(worker)
     
     # Analyse the buffer index and the delta time between frames to verify that no frames were skipped
@@ -109,6 +110,14 @@ class FrameServer(mp.Process):
             self.buffer_index_locked[index] = 0
         else:
             logging.error('Attempt to free a buffer index that is not locked')
+
+    def reset(self):
+        # Free all buffer indexes
+        for i in range(param_image_buffer_length):
+            if self.buffer_index_locked[i] != 1:
+                self.freeBufferIndex(i)
+
+        self.run_camera.clear()
         
     # Read incomming jobs in the job_queue and service them based on 'type'
     def spinServiceJobs(self):
@@ -120,11 +129,23 @@ class FrameServer(mp.Process):
                     self.killSelf()
                     break
                 
-                elif job['type'] == 'start':
+                elif job['type'] == 'load':
                     # Create Camera Driver
-                    name = 'CameraReader'
-                    self.camera_driver_worker = ImageReadWorker(name,self.src,self.run_event,self.job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'])
+                    self.camera_driver_worker = ImageReadWorker('CameraReader',job['src'],self.run_camera,self.job_queue,shared_vars['buffer_frames'],shared_vars['buffer_times'],shared_vars['buffer_index'])
                 
+                elif job['type'] == 'loaded':
+                    self.master_queue.put({'type':'loaded','src':job['src']})
+
+                elif job['type'] == 'start':
+                    self.run_camera.set()
+
+                elif job['type'] == 'stop':
+                    self.reset()
+
+                elif job['type'] == 'eof':
+                    self.reset()
+                    self.master_queue.put({'type':'eof'})
+
                 elif job['type'] == 'camera':
                     self.updateBufferIndex(job['index'])
                     index, frame_time = self.getBufferIndex(None,lock=False)
@@ -206,7 +227,8 @@ class FrameServer(mp.Process):
     
     # Kill all child processes and wait until they are all dead
     def killSelf(self):
-        self.run_event.clear()
+        self.run_workers.clear()
+        self.run_camera.clear()
         self.killPoolWorkers()
         self.camera_driver_worker.join()
         
@@ -260,31 +282,31 @@ class ImageReadWorker(mp.Process):
         return buffer_index
     
     def spinFrameCapture(self):
-        while self.run_event.is_set():
-            if True:
-                self.cap = cv2.VideoCapture(self.src)
-                hz = self.cap.get(cv2.CAP_PROP_FPS)
-                logging.debug('Frame rate check: '+str(hz))
-            while self.run_event.is_set() and self.cap.isOpened():
-                start = time.time()
-                ret,frame = self.cap.read()
-                if not ret: break # broken video capture object
-                if param_flip_video:
-                    buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
-                else:
-                    buffer_index = self.newFrameToBuffer(frame)
-                logging.debug('Reporting frame captured to index '+str(buffer_index))
-                self.parent_queue.put({'type':'camera','index':buffer_index})
-                # Delay
-                if not param_use_cam:
-                    time.sleep(max(0,(1/hz)-(time.time()-start)))
-                else:
-                    # TODO: fix for when we have a real camera
-                    pass
-            if self.cap.isOpened():
-                self.cap.release()
+        self.cap = cv2.VideoCapture(self.src)
+        hz = self.cap.get(cv2.CAP_PROP_FPS)
+        logging.debug('Frame rate check: '+str(hz))
+
+        self.parent_queue.put({'type':'loaded','src':self.name})
+        self.run_event.wait(timeout=None)
+
+        while self.run_event.is_set() and self.cap.isOpened():
+            start = time.time()
+            ret,frame = self.cap.read()
+            if not ret: break # broken video capture object
+            if param_flip_video:
+                buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
             else:
-                logging.debug('Restarting capture')
+                buffer_index = self.newFrameToBuffer(frame)
+            logging.debug('Reporting frame captured to index '+str(buffer_index))
+            self.parent_queue.put({'type':'camera','index':buffer_index})
+            # Delay
+            if param_src_file == -1:
+                pass
+            else:
+                time.sleep(max(0,(1/hz)-(time.time()-start)))
+        if self.cap.isOpened():
+            self.cap.release()
+        self.parent_queue.put({'type':'eof'})
                 
     def killSelf(self):
         if self.cap.isOpened():
@@ -303,56 +325,56 @@ class ImageReadWorker(mp.Process):
 # ===================================
 #
 # ===================================
-class ImageWriteWorker(mp.Process):
-    # Barebones initialization, pass shared data structures into the process and start it
-    def __init__(self,name,file_name,run_event,job_queue,buffer_frames):
-        super(ImageWriteWorker, self).__init__()
-        self.name = name
-        self.file_name = file_name
-        self.run_event = run_event
-        self.job_queue = job_queue
+# class ImageWriteWorker(mp.Process):
+#     # Barebones initialization, pass shared data structures into the process and start it
+#     def __init__(self,name,file_name,run_event,job_queue,buffer_frames):
+#         super(ImageWriteWorker, self).__init__()
+#         self.name = name
+#         self.file_name = file_name
+#         self.run_event = run_event
+#         self.job_queue = job_queue
         
-        global shared_vars
-        shared_vars['buffer_frames'] = buffer_frames
+#         global shared_vars
+#         shared_vars['buffer_frames'] = buffer_frames
         
-        self.start()
+#         self.start()
     
-    def newFrameToBuffer(self,frame):
-        # Update buffer with new frame
-        with shared_vars['buffer_index'].get_lock():
-            shared_vars['buffer_index'].value = (int(shared_vars['buffer_index'].value)+1) %param_image_buffer_length
-            buffer_index = int(shared_vars['buffer_index'].value)
-            with shared_vars['buffer_frames'][buffer_index][0].get_lock():
-                # Dump image data into buffer
-                shared_vars['buffer_frames'][buffer_index][1][:] = frame
-                with shared_vars['buffer_times'][0].get_lock():
-                    shared_vars['buffer_times'][1][buffer_index] = time.time()
-        return buffer_index
+#     def newFrameToBuffer(self,frame):
+#         # Update buffer with new frame
+#         with shared_vars['buffer_index'].get_lock():
+#             shared_vars['buffer_index'].value = (int(shared_vars['buffer_index'].value)+1) %param_image_buffer_length
+#             buffer_index = int(shared_vars['buffer_index'].value)
+#             with shared_vars['buffer_frames'][buffer_index][0].get_lock():
+#                 # Dump image data into buffer
+#                 shared_vars['buffer_frames'][buffer_index][1][:] = frame
+#                 with shared_vars['buffer_times'][0].get_lock():
+#                     shared_vars['buffer_times'][1][buffer_index] = time.time()
+#         return buffer_index
     
-    def spinFrameWriting(self):
-        fourcc = cv2.VideoWriter_fourcc('.avi')
-        writer = cv2.VideoWriter(self.file_name, fourcc, param_cam_fps,(param_frame_shape[1],param_frame_shape[0]), True)
+#     def spinFrameWriting(self):
+#         fourcc = cv2.VideoWriter_fourcc('.avi')
+#         writer = cv2.VideoWriter(self.file_name, fourcc, param_cam_fps,(param_frame_shape[1],param_frame_shape[0]), True)
 
-        while self.run_event.is_set():
-            job = job_queue.get()
+#         while self.run_event.is_set():
+#             job = job_queue.get()
             
-            if True:
-                writer.write(frame)
+#             if True:
+#                 writer.write(frame)
         
                 
-    def killSelf(self):
-        if self.cap.isOpened():
-            self.cap.release()
+#     def killSelf(self):
+#         if self.cap.isOpened():
+#             self.cap.release()
     
-    def run(self):
-        logging.info('Starting Process')
-        try:
-            self.spinFrameCapture()
-        except Exception as e:
-            logging.error('Killed due to ' + str(e))
-            self.killSelf()
-        finally:
-            logging.info('Shutting Down Process')
+#     def run(self):
+#         logging.info('Starting Process')
+#         try:
+#             self.spinFrameCapture()
+#         except Exception as e:
+#             logging.error('Killed due to ' + str(e))
+#             self.killSelf()
+#         finally:
+#             logging.info('Shutting Down Process')
 
 # ===================================
 #
