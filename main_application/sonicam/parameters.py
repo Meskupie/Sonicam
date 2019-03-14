@@ -57,6 +57,7 @@ else:
     param_tf_mtcnn_config = tf.ConfigProto(log_device_placement=False)
     
 # Beamformer
+param_audio_url = 'http://localhost:7000'
 param_fs = 44100
 param_blocksize = param_fs // 100
 param_c = 343 # m/s
@@ -83,7 +84,7 @@ param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 # Webserver
 param_output_every = 2
 
-param_output_style = 'feeds'
+param_output_style = 'full'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 

@@ -80,7 +80,7 @@ processes.append(Beamformer('Beamformer',queue_dict))
 # =============
 # Ready Control
 # =============
-ready_names = ['audio'] #AUDIO (remove defaut)
+ready_names = [] #AUDIO (remove defaut)
 ready_names_required = ['face','audio']
 def updateReady(name=None):
     if name != None:
@@ -94,7 +94,7 @@ def updateReady(name=None):
 # =============
 # Loading Control
 # =============
-loaded_names = ['audio'] #AUDIO (remove defaut)
+loaded_names = [] #AUDIO (remove defaut)
 loaded_names_required = ['camera','audio']
 def updateLoaded(name=None):
     if name != None:
@@ -109,19 +109,19 @@ def updateLoaded(name=None):
     return True
 def resetLoaded():
     global loaded_names
-    loaded_names = ['audio'] #AUDIO (remove defaut)
+    loaded_names = [] #AUDIO (remove defaut)
 
 # =============
 # Stream Control
 # =============
 def ended_stream():
     tracker.reset()
-    POIManager.reset()
+    poi_manager.reset()
     socket.emit('state','eof')
 
 def stop_stream():
     tracker.reset()
-    POIManager.reset()
+    poi_manager.reset()
     requests.post(param_audio_url+"/state", json={'state':'stop'})
     queue_dict['frame_server'].put({'type':'stop'})
 
@@ -323,10 +323,11 @@ def files_url():
         logging.error('Unknown API call to /api/files ('+str(request.method)+')')
         return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
-@app.route('/api/audiostate/', methods=['POST'])
+@app.route('/api/audiostate', methods=['POST'])
 def audiostate_url():
     if request.method == 'POST':
         data = request.get_json()
+        logging.info("got data from audiostate: " + str(data))
         if data['state'] == 'ready':
             updateReady('audio')
         elif data['state'] == 'loaded':
@@ -347,6 +348,20 @@ def uisettings_url():
         logging.error('Unknown API call to /api/audiostate ('+str(request.method)+')')
         return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
+def force_start_file():
+    # Force start file
+    if param_src_force:
+        logging.info('Loading file in headless mode')
+        while not updateReady():
+            logging.info('Waiting for ready')
+            e.sleep(0.1)
+        logging.info('Ready')
+        load_stream(param_src_files[param_src_file_i])
+        while not updateLoaded():
+            logging.info('Waiting for loaded')
+            e.sleep(0.1)
+        logging.info('Playing')
+
 if __name__ == '__main__':
     running_flag = mp.Value(ctypes.c_ubyte)
     running_flag.value = 1
@@ -354,19 +369,7 @@ if __name__ == '__main__':
     threads = []
     threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['master']))
     threads.append(e.spawn(waitForInput,running_flag,threads))
-
-    # Force start file
-    if param_src_force:
-        logging.info('Loading file in headless mode')
-        while not updateReady():
-            logging.debug('Waiting for ready')
-            e.sleep(0.1)
-        logging.debug('Ready')
-        load_stream(param_src_files[param_src_file_i])
-        while not updateLoaded():
-            logging.debug('Waiting for loaded')
-            e.sleep(0.1)
-        logging.debug('Playing')
+    threads.append(e.spawn(force_start_file))
 
     # Start webserver    
     try:
