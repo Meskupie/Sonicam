@@ -37,7 +37,7 @@ const person = (props) => {
                     volumeWidth={props.volumeWidth}
                     voulumeSpacing={props.voulumeSpacing}
                     type={"background"}
-                    status={props.volumeState}
+                    status={props.soundState}
                     isMuted={props.isMuted}
                 />
                 <Volume
@@ -46,7 +46,7 @@ const person = (props) => {
                     volumeWidth={props.volumeWidth}
                     voulumeSpacing={props.voulumeSpacing}
                     type={"multiplier"}
-                    status={props.volumeState}
+                    status={props.soundState}
                     isMuted={props.isMuted}
                 />
             </Aux>
@@ -81,7 +81,7 @@ const person = (props) => {
                     isHeld={props.isHeld}
                 />
                 <SoundStatus
-                    status={props.volumeState}
+                    status={props.soundState}
                     isMuted={props.isMuted}
                 />
             </div>

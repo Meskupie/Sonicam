@@ -4,7 +4,8 @@ import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
 import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
-import { getVideoFeed } from './Functions/GetVideoFeed/GetVideoFeed';
+import { getPOIFeed, getVideoFeedState, getVideoFeed } from './Functions/GetVideoFeed/GetVideoFeed';
+//import { getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeedState';
 
 const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
@@ -21,9 +22,36 @@ const BUTTON_SMALL_WIDTH = 70;
 const BUTTON_LARGE_WIDTH = 215;
 const SPACING_Y = 25;
 const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
+const ONJETSON = false;
 var holdPOIOrBackground;
 var holdUserVolumeButton;
 // var sendPOSTVolume = true;
+const initialState = {
+  selectedPOI: -1,
+  masterVolume: 1,
+  refreshNewPersonList: false,
+  backgroundClicked: false,
+  backgroundHeld: false,
+  POIClicked: false,
+  POIHeld: null,
+  displaySettings: false,
+  parsedPOIs: undefined,
+  videoState: "null",
+  POIs: [
+    {
+      id: -1,
+      height: null,
+      is_visible: null,
+      is_known: null,
+      importance: null,
+      name: "Background",
+      state: "normal",
+      mute: false,
+      volumeMultiplier: (1).toFixed(2),
+      volumeNormalizer: 0,
+      position: [1, 1],
+    }],
+};
 
 
 var isEqual = function (value, other) {
@@ -91,48 +119,25 @@ var isEqual = function (value, other) {
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      selectedPOI: -1,
-      masterVolume: 1,
-      refreshNewPersonList: false,
-      backgroundClicked: false,
-      backgroundHeld: false,
-      POIClicked: false,
-      POIHeld: null,
-      displaySettings: false,
-      POIs: [
-        {
-          id: -1,
-          height: null,
-          is_visible: null,
-          is_known: null,
-          importance: null,
-          name: "Background",
-          mute: false,
-          volumeMultiplier: (1).toFixed(2),
-          volumeNormalizer: 0,
-          position: [1, 1],
-        }],
-      selectedSource: "camera",
-      sources: [
-        {
-          id: "camera",
-          name: "Camera",
-        },
-        {
-          id: "0",
-          name: "File: test1-fast-movement",
-        },
-        {
-          id: "1",
-          name: "File: test2-stationary",
-        }
-      ]
-    };
+    this.state = initialState;
   }
 
   componentDidMount() {
+    this.httpGetSources();
 
+    getVideoFeedState((err, videoState) => {
+      console.log(videoState);
+      this.setState({ videoState: videoState });
+      if (this.state.videoState === "eof") {
+        this.reset();
+      }
+    });
+    getPOIFeed((err, feeds) => {
+      let parsedPOIs = JSON.parse(feeds);
+      if (!isEqual(this.state.parsedPOIs, parsedPOIs)) {
+        this.setState({ parsedPOIs });
+      }
+    });
   }
 
   masterVolumeChangeHandler = (event) => {
@@ -231,9 +236,12 @@ class App extends Component {
     this.setState({ displaySettings: tempDisplaySettings });
   }
 
-  sourceClickedHandler = (selectedId) => {
-    // console.log("source clicked");
-    this.setState({ selectedSource: selectedId });
+  sourceClickedHandler = (selected) => {
+    console.log("source clicked");
+    this.setState(initialState);
+    this.httpPost(selected, '/api/files/')
+    this.setState({ selectedSource: selected });
+    this.setState({ displaySettings: true });
   }
 
   newPOIClickedHander = (event, selectedPOI) => {
@@ -286,29 +294,6 @@ class App extends Component {
     this.httpPostPOIsAndGet(POIs);
 
     this.setState({ POIs: POIs });
-
-    getVideoFeed((err, feeds) => {
-
-      let parsedPOIs = JSON.parse(feeds);
-      if (!isEqual(this.state.parsedPOIs, parsedPOIs)) {
-        this.setState({ parsedPOIs });
-      }
-
-      // for (let i = 0; i < this.state.POIs.length; i++) {
-      //   for (let j = 0; j < this.state.parsedPOIs.length; j++) {
-      //     if (this.state.POIs[i].id === parsedPOIs[j].id) {
-      //       const POIs = [...this.state.POIs];
-
-      //       POIs[i].soundStatus = parsedPOIs[j].state;
-
-      //       this.setState({ POIs: POIs });
-      //     }
-      //   }
-      // }
-
-
-
-    });
 
     const refreshNewPersonListTemp = !this.state.refreshNewPersonList;
     this.setState({ refreshNewPersonList: refreshNewPersonListTemp });
@@ -425,6 +410,10 @@ class App extends Component {
     this.setState({ backgroundHeld: true });
   }
 
+  reset() {
+    this.setState(initialState);
+  }
+
   httpPost = (data, url) => {
     // console.log("Posting data to backend...");
     // console.log(postPOIs);
@@ -453,12 +442,13 @@ class App extends Component {
       });;
   }
 
-  httpGet = (url) => {
-    fetch('http://localhost:8080/http://localhost:5000'+ url, {
+  httpGetSources = () => {
+    fetch('http://localhost:8080/http://localhost:5000/api/files/', {
       method: "GET",
     })
       .then(
         (response) => {
+          console.log(response);
           if (response.status !== 200) {
             console.log('Looks like there was a problem. Status Code: ' +
               response.status);
@@ -467,7 +457,8 @@ class App extends Component {
 
           // Examine the text in the response
           response.json().then((data) => {
-            return(data);
+            this.setState({ sources: data });
+
           });
         }
       )
@@ -539,12 +530,23 @@ class App extends Component {
   // onMouseOut can help with mouse leaving input area
 
   render() {
+
     var appStyle = {
       width: APP_WIDTH + "px",
       height: APP_HEIGHT + "px",
       //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
       //and transform moves the UI to the corners of window after scaling
       // transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
+    }
+
+    if (ONJETSON) {
+      var appStyle = {
+        width: APP_WIDTH + "px",
+        height: APP_HEIGHT + "px",
+        //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
+        //and transform moves the UI to the corners of window after scaling
+        transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
+      }
     }
 
     var addPerson = null;
@@ -559,6 +561,7 @@ class App extends Component {
           selectedSource={this.state.selectedSource}
           sources={this.state.sources}
           sourceClickedHandler={this.sourceClickedHandler}
+          videoState={this.state.videoState}
         />
     }
 

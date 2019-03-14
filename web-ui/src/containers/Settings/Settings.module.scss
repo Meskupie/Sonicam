@@ -30,22 +30,27 @@
     height: 2px;
 }
 
-.Spinner, .SpinnerBackground, .Play{
+.PlayingSpinner, .LoadingSpinner, .SpinnerBackground, .Play{
     position: absolute;
     transition: opacity 0.1s ease-in-out;
 }
 
-.Spinner{
+.LoadingSpinner{
     transform: rotate(90deg);
     animation: spin 2s linear infinite;
 }
 
+.PlayingSpinner{
+    animation: breathe 1s ease-in-out infinite;
+}
+
 .Play{
-    opacity: 1;
+    opacity: 1 !important;
 }
 
 .Hidden{
-    opacity: 0;
+    opacity: 0 !important;
+    animation: none !important;
 }
 
 .StatusContainer{
@@ -58,3 +63,9 @@
     0% { transform: rotate(45deg); }
     100% { transform: rotate(405deg); }
   }
+
+@keyframes breathe {
+    0% { opacity:.3;}
+    50% {opacity:1;}
+    100% { opacity:.3;}
+}

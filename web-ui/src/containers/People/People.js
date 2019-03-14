@@ -71,10 +71,13 @@ class People extends PureComponent {
             //     return null;
             // }
 
-            let soundStatus = null;
+            let soundState = null;
 
             if (parsedPOI != null) {
-                soundStatus = parsedPOI.state;
+                soundState = parsedPOI.state;
+            }
+            if (POI.id === -1){
+                soundState = POI.state;
             }
 
             return (
@@ -87,7 +90,7 @@ class People extends PureComponent {
                         imgWidthHeight={this.props.imageWidthHeight}
                         volumeWidth={this.props.volumeWidth}
                         multiplierVolume={multiplierVolume}
-                        volumeState={soundStatus}
+                        soundState={soundState}
                         onClick={(event) => this.props.onPOIClick(event, POI.id)}
                         onMouseUp={(event) => this.props.onPOIMouseUp(event)}
                         onMouseOut={(event) => this.props.onPOIMouseOut(event)}
