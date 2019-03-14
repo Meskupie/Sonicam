@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import classes from './Volume.module.scss';
 import Aux from '../../../../hoc/Aux/Aux';
 
@@ -7,7 +7,14 @@ import Aux from '../../../../hoc/Aux/Aux';
 //modifying a current tracked face
 
 //const volume = (this.props) => {
-class Volume extends PureComponent {
+class Volume extends Component {
+
+    shouldComponentUpdate(nextProps, nextState) {
+        if(this.props.volume === nextProps.volume && this.props.status === nextProps.status){
+            return false;
+        }
+        return true;
+    }
 
     render() {
         let circleClass = [classes.CircularChart]

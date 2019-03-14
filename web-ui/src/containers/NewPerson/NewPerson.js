@@ -6,34 +6,41 @@ class NewPerson extends Component {
     constructor(props) {
         super(props);
         this.state = {
-
+            newPOIs: this.props.state.newPOIs
         }
     }
 
-    componentDidMount() {
-        setTimeout((data) => {
-            fetch('http://localhost:8080/http://localhost:5000/api/poisverbose/', {
-                method: "GET",
-            })
-                .then(
-                    (response) => {
-                        if (response.status !== 200) {
-                            console.log('Looks like there was a problem. Status Code: ' +
-                                response.status);
-                            return;
-                        }
+    // shouldComponentUpdate(nextProps, nextState){
+    //     if(this.props.state.newPOIs !== nextProps.state.newPOIs){
+    //         return true;
+    //     }
 
-                        // Examine the text in the response
-                        response.json().then((data) => {
-                            this.setState({ newPOIs: data })
-                        });
+    //     return false;
+    // }
+
+    componentDidMount() {
+        // console.log("refreshing list");
+        fetch('http://localhost:8080/http://localhost:5000/api/poisverbose/', {
+            method: "GET",
+        })
+            .then(
+                (response) => {
+                    if (response.status !== 200) {
+                        console.log('Looks like there was a problem. Status Code: ' +
+                            response.status);
+                        return;
                     }
-                )
-                .catch(function (err) {
-                    console.log('Fetch Error :-S', err);
-                });
-            console.log("getting");
-        }, 100)
+
+                    // Examine the text in the response
+                    response.json().then((data) => {
+                        this.setState({ newPOIs: data })
+                    });
+                }
+            )
+            .catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            });
+        // console.log("getting");
     }
 
     render() {

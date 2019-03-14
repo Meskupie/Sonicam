@@ -1,28 +1,37 @@
-import React from 'react';
+import React, { Component } from 'react';
 import classes from './MasterVolumeButton.module.scss';
 
-const masterVolumeButton = (props) => {
-    let masterVolumeButtonStyle = {
-        right: props.params.spacingUI + props.params.buttonSmallWidth + 'px',
-        width: props.params.buttonLargeWidth + 'px',
-        height: props.params.buttonHeight + 'px'
-    };
-
-    let sliderOverlayStyle = {
-        width: props.volume / 2 + "%"
+class MasterVolumeButton extends Component {
+    shouldComponentUpdate(nextProps, nextState){
+        if(this.props.volume !== nextProps.volume){
+            return true;
+        }
+        return false;
     }
 
-    return (
-        <div className={classes.VolumeButton} style={masterVolumeButtonStyle}>
-            <div className={classes.SliderContainer}>
-                <div className={classes.SliderActive}>
-                    <input className={classes.Slider} onChange={props.changed} type="range" min="0" max="200" value={props.volume}></input>
-                    <div className={classes.SliderOverlay} style={sliderOverlayStyle} />
+    render() {
+        let masterVolumeButtonStyle = {
+            right: this.props.params.spacingUI + this.props.params.buttonSmallWidth + 'px',
+            width: this.props.params.buttonLargeWidth + 'px',
+            height: this.props.params.buttonHeight + 'px'
+        };
+
+        let sliderOverlayStyle = {
+            width: this.props.volume / 2 + "%"
+        }
+
+        return (
+            <div className={classes.VolumeButton} style={masterVolumeButtonStyle}>
+                <div className={classes.SliderContainer}>
+                    <div className={classes.SliderActive}>
+                        <input className={classes.Slider} onChange={this.props.changed} type="range" min="0" max="200" value={this.props.volume}></input>
+                        <div className={classes.SliderOverlay} style={sliderOverlayStyle} />
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 
-export default masterVolumeButton
+export default MasterVolumeButton

@@ -31,7 +31,6 @@ class People extends PureComponent {
             isSelected = false;
 
             let multiplierVolume = POI.volumeMultiplier * this.props.state.masterVolume;
-            let normalizerVolume = POI.volumeNormalizer + multiplierVolume;
 
             let posX = this.props.spacingX * (x - 1) + this.props.widthHeight * (x - 1) + this.props.offsetLeft;
             let posY = this.props.spacingY * (y - 1) + this.props.widthHeight * (y - 1);
@@ -59,7 +58,9 @@ class People extends PureComponent {
 
             if (POI.id !== -1 && this.props.state.parsedPOIs !== undefined) {
                 var parsedPOI = this.props.state.parsedPOIs.find(x => x.id === POI.id);
-                image = "data:image/jpeg;charset=utf-8;base64," + parsedPOI.frame;
+                if (parsedPOI !== undefined && parsedPOI !== null) {
+                    image = "data:image/jpeg;charset=utf-8;base64," + parsedPOI.frame;
+                }
             }
             // else if (POI.id !== -1 && this.props.state.copyparsedPOIs !== null && this.props.state.copyparsedPOIs !== undefined && !this.props.shouldRefresh) {
             //     let sourceImage = this.props.state.copyparsedPOIs.find(x => x.id === POI.id);
@@ -72,7 +73,7 @@ class People extends PureComponent {
 
             let soundStatus = null;
 
-            if(parsedPOI != null){
+            if (parsedPOI != null) {
                 soundStatus = parsedPOI.state;
             }
 
@@ -85,7 +86,6 @@ class People extends PureComponent {
                         widthHeight={this.props.widthHeight}
                         imgWidthHeight={this.props.imageWidthHeight}
                         volumeWidth={this.props.volumeWidth}
-                        normalizerVolume={normalizerVolume}
                         multiplierVolume={multiplierVolume}
                         volumeState={soundStatus}
                         onClick={(event) => this.props.onPOIClick(event, POI.id)}
