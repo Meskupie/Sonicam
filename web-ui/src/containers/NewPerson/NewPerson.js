@@ -84,6 +84,7 @@ class NewPerson extends Component {
                     imgSource={image}
                     onClick={(event) => this.props.newPOIClickedHander(event, POI)}
                     name={POI.id}
+                    isNewPerson={true}
                 />
             );
         });

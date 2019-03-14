@@ -25,6 +25,84 @@ const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
 var holdPOIOrBackground;
 var holdUserVolumeButton;
 
+var isEqual = function (value, other) {
+
+  // Get the value type
+  var type = Object.prototype.toString.call(value);
+
+  // If the two objects are not the same type, return false
+  if (type !== Object.prototype.toString.call(other)) return false;
+
+  // If items are not an object or array, return false
+  if (['[object Array]', '[object Object]'].indexOf(type) < 0) return false;
+
+  // Compare the length of the length of the two items
+  var valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
+  var otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
+  if (valueLen !== otherLen) return false;
+
+  // Compare two items
+  var compare = function (item1, item2) {
+
+    // Get the object type
+    var itemType = Object.prototype.toString.call(item1);
+
+    // If an object or array, compare recursively
+    if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
+      if (!isEqual(item1, item2)) return false;
+    }
+
+    // Otherwise, do a simple comparison
+    else {
+
+      // If the two items are not the same type, return false
+      if (itemType !== Object.prototype.toString.call(item2)) return false;
+
+      // Else if it's a function, convert to a string and compare
+      // Otherwise, just compare
+      if (itemType === '[object Function]') {
+        if (item1.toString() !== item2.toString()) return false;
+      } else {
+        if (item1 !== item2) return false;
+      }
+
+    }
+  };
+
+  // Compare properties
+  if (type === '[object Array]') {
+    for (var i = 0; i < valueLen; i++) {
+      if (compare(value[i], other[i]) === false) return false;
+    }
+  } else {
+    for (var key in value) {
+      if (value.hasOwnProperty(key)) {
+        if (compare(value[key], other[key]) === false) return false;
+      }
+    }
+  }
+
+  // If nothing failed, return true
+  return true;
+
+};
+
+var httpPostPOIs = function (POIs){
+  let postPOIs = POIs.map(POI => {
+    return (
+      {
+        id: POI.id,
+        name: POI.name,
+        height: POI.height,
+        mute: POI.mute,
+        volume: POI.volumeMultiplier
+      }
+    )
+  })
+
+  httpPost(postPOIs, '/api/pois/');
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -34,7 +112,6 @@ class App extends Component {
       refreshNewPersonList: false,
       backgroundClicked: false,
       backgroundHeld: false,
-      copyParsedImage: null,
       POIClicked: false,
       POIHeld: null,
       displaySettings: false,
@@ -50,7 +127,6 @@ class App extends Component {
           volumeMultiplier: (1).toFixed(2),
           volumeNormalizer: 0,
           position: [1, 1],
-          soundStatus: "normal"
         }],
       selectedSource: "camera",
       sources: [
@@ -185,6 +261,7 @@ class App extends Component {
     if (this.state.POIHeld !== null) {
       const POIHeldIndex = this.state.POIs.findIndex(x => x.id === this.state.POIHeld);
       POIs[POIHeldIndex].id = selectedPOI.id;
+      POIs[POIHeldIndex].soundStatus = selectedPOI.state;
       this.setState({ POIHeld: null });
     }
     //If new POI is being added
@@ -206,34 +283,38 @@ class App extends Component {
       selectedPOI.position[1] = posY;
       selectedPOI.volumeMultiplier = (1).toFixed(2);
       selectedPOI.volumeNormalizer = 0;
-      selectedPOI.soundStatus = "normal";
       selectedPOI.mute = true;
-      selectedPOI.name= "name"
+      selectedPOI.name = "name"
 
 
       POIs.push(selectedPOI);
     }
 
-    let postPOIs = POIs.map(POI => {
-      return (
-        {
-          id: POI.id,
-          name: POI.name,
-          height: POI.height,
-          mute: POI.mute,
-          volume: POI.volumeMultiplier
-        }
-      )
-    })
-
-    httpPost(postPOIs, '/api/pois/');
+    httpPostPOIs(POIs);
 
     this.setState({ POIs: POIs });
 
     getVideoFeed((err, feeds) => {
 
-      let parsedImage = JSON.parse(feeds);
-      this.setState({ parsedImage });
+      let parsedPOIs = JSON.parse(feeds);
+      if (!isEqual(this.state.parsedPOIs, parsedPOIs)) {
+        this.setState({ parsedPOIs });
+      }
+
+      // for (let i = 0; i < this.state.POIs.length; i++) {
+      //   for (let j = 0; j < this.state.parsedPOIs.length; j++) {
+      //     if (this.state.POIs[i].id === parsedPOIs[j].id) {
+      //       const POIs = [...this.state.POIs];
+
+      //       POIs[i].soundStatus = parsedPOIs[j].state;
+
+      //       this.setState({ POIs: POIs });
+      //     }
+      //   }
+      // }
+
+
+
     });
 
     const refreshNewPersonListTemp = !this.state.refreshNewPersonList;
@@ -282,19 +363,7 @@ class App extends Component {
     this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
 
-    var postPOIs = this.state.POIs.map(POI => {
-      return (
-        {
-          id: POI.id,
-          name: POI.name,
-          height: POI.height,
-          mute: POI.mute,
-          volume: POI.volumeMultiplier
-        }
-      )
-    })
-
-    httpPost(postPOIs, '/api/pois/');
+    httpPostPOIs(this.state.POIs);
 
     holdPOIOrBackground = setTimeout(() => { this.POIHeldHandler(selectedId) }, 400);
   }
@@ -337,7 +406,6 @@ class App extends Component {
     console.log('POI with id ' + selectedId + ' held');
     if (selectedId !== -1) {
       this.setState({ POIHeld: selectedId });
-      this.setState({ copyParsedImage: this.state.parsedImage });
     }
   }
 
@@ -373,7 +441,6 @@ class App extends Component {
   backgroundHeldHandler() {
     console.log('background held');
     this.setState({ backgroundHeld: true });
-    this.setState({ copyParsedImage: this.state.parsedImage });
   }
 
   // onMouseOut can help with mouse leaving input area

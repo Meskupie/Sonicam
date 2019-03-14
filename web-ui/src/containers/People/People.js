@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import Person from '../../components/POI/Person/Person';
 import PersonSelector from '../../components/UI/Indicators/PersonSelector/PersonSelector';
 import classes from './People.module.scss'
 import Aux from '../../hoc/Aux/Aux';
 
-class People extends Component {
+class People extends PureComponent {
 
     render() {
         let selectedPOI = this.props.state.POIs.find(x => x.id === this.props.state.selectedPOI);
@@ -57,18 +57,24 @@ class People extends Component {
 
             let image = " ";
 
-            if (POI.id !== -1 && this.props.state.parsedImage !== undefined && this.props.shouldRefresh) {
-                let sourceImage = this.props.state.parsedImage.find(x => x.id === POI.id);
-                image = "data:image/jpeg;charset=utf-8;base64," + sourceImage.frame;
+            if (POI.id !== -1 && this.props.state.parsedPOIs !== undefined) {
+                var parsedPOI = this.props.state.parsedPOIs.find(x => x.id === POI.id);
+                image = "data:image/jpeg;charset=utf-8;base64," + parsedPOI.frame;
             }
-            else if (POI.id !== -1 && this.props.state.copyParsedImage !== null && this.props.state.copyParsedImage !== undefined && !this.props.shouldRefresh) {
-                let sourceImage = this.props.state.copyParsedImage.find(x => x.id === POI.id);
-                image = "data:image/jpeg;charset=utf-8;base64," + sourceImage.frame;
-            }
+            // else if (POI.id !== -1 && this.props.state.copyparsedPOIs !== null && this.props.state.copyparsedPOIs !== undefined && !this.props.shouldRefresh) {
+            //     let sourceImage = this.props.state.copyparsedPOIs.find(x => x.id === POI.id);
+            //     image = "data:image/jpeg;charset=utf-8;base64," + sourceImage.frame;
+            // }
             // //This removes POI's if they do not have video feed.  This should not be perminant
             // else if(POI.id !== -1){
             //     return null;
             // }
+
+            let soundStatus = null;
+
+            if(parsedPOI != null){
+                soundStatus = parsedPOI.state;
+            }
 
             return (
                 <Aux key={POI.id}>
@@ -81,7 +87,7 @@ class People extends Component {
                         volumeWidth={this.props.volumeWidth}
                         normalizerVolume={normalizerVolume}
                         multiplierVolume={multiplierVolume}
-                        volumeState={POI.soundStatus}
+                        volumeState={soundStatus}
                         onClick={(event) => this.props.onPOIClick(event, POI.id)}
                         onMouseUp={(event) => this.props.onPOIMouseUp(event)}
                         onMouseOut={(event) => this.props.onPOIMouseOut(event)}
@@ -94,6 +100,7 @@ class People extends Component {
                         shouldRefresh={this.props.shouldRefresh}
                         isHeld={POI.id === this.props.POIHeld}
                         isMuted={POI.mute}
+                        isNewPerson={false}
                     />
                     {selectedIndicator}
                 </Aux>

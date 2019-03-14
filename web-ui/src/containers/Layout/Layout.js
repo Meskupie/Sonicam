@@ -1,11 +1,11 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import classes from './Layout.module.scss';
 import EqualizerButton from '../../components/UI/Buttons/EqualizerButton/EqualizerButton';
 import UserVolumeButton from '../../components/UI/Buttons/UserVolumeButton/UserVolumeButton';
 import SettingsButton from '../../components/UI/Buttons/SettingsButton/SettingsButton';
 import MasterVolumeButton from '../../components/UI/Buttons/MasterVolumeButton/MasterVolumeButton';
 
-class Layout extends Component {
+class Layout extends PureComponent {
     render() {        
         let buttonParameters = {
             offsetTop: this.props.offsetTop,
