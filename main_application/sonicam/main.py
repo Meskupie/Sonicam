@@ -7,6 +7,7 @@ import ctypes
 import base64
 import cv2
 import json
+import requests
 from kbhit import KBHit
 
 import threading as t
@@ -96,7 +97,6 @@ def updateReady(name=None):
 loaded_names = ['audio'] #AUDIO (remove defaut)
 loaded_names_required = ['camera','audio']
 def updateLoaded(name=None):
-    global loaded_names
     if name != None:
         loaded_names.append(name)
     logging.info('loaded_names '+str(loaded_names))
@@ -108,25 +108,30 @@ def updateLoaded(name=None):
     start_stream()
     return True
 def resetLoaded():
+    global loaded_names
     loaded_names = ['audio'] #AUDIO (remove defaut)
 
 # =============
 # Stream Control
 # =============
 def ended_stream():
+    tracker.reset()
+    POIManager.reset()
     socket.emit('state','eof')
 
 def stop_stream():
-    # AUDIO (stop signal)
+    tracker.reset()
+    POIManager.reset()
+    requests.post(param_audio_url+"/state", json={'state':'stop'})
     queue_dict['frame_server'].put({'type':'stop'})
 
 def load_stream(file):
     resetLoaded()
-    # AUDIO (load signal)
+    requests.post(param_audio_url+"/fname", json={'fname':file})
     queue_dict['frame_server'].put({'type':'load','src':param_src_video_path+file+param_src_video_suffix})
 
 def start_stream():
-    # AUDIO (start signal)
+    requests.post(param_audio_url+"/state", json={'state':'start'})
     queue_dict['frame_server'].put({'type':'start'})
 
 # =============
@@ -134,9 +139,10 @@ def start_stream():
 # =============
 tracker = Tracker()
 poi_manager = POIManager()
+add_chin = False
 
 def emitBeamformer():
-    pass
+    requests.post(param_audio_url+"/data",json=POIManager.getBeamformer())
     
 def emitFullFrame(frame_raw,tracks):
     frame = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
@@ -198,6 +204,8 @@ def spinServiceJobs(flag,job_queue):
                             emitFullFrame(shared_buffer_frames[job['buffer_index']][1],tracker.track_filters)
                         elif param_output_style == 'feeds':
                             emitFeeds(poi_manager.getFeeds())
+                            if add_chin:
+                                emitFullFrame(shared_buffer_frames[job['buffer_index']][1],tracker.track_filters)
                     
                 elif job['type'] == 'face_results':
                     # Record the frame rate
@@ -278,6 +286,7 @@ def poi_url():
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     else:
         logging.error('Unknown API call to /api/pois/ ('+str(request.method)+')')
+        return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
 @app.route('/api/pois/<int:poi_id>/', methods=['GET','POST'])
 def poi_id_url(poi_id):
@@ -290,6 +299,7 @@ def poi_id_url(poi_id):
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     else:
         logging.error('Unknown API call to /api/pois/id ('+str(request.method)+')')
+        return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
 @app.route('/api/poisverbose/', methods=['GET'])
 def poiverbose_url():
@@ -311,6 +321,7 @@ def files_url():
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     else:
         logging.error('Unknown API call to /api/files ('+str(request.method)+')')
+        return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
 @app.route('/api/audiostate/', methods=['POST'])
 def audiostate_url():
@@ -323,7 +334,18 @@ def audiostate_url():
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     else:
         logging.error('Unknown API call to /api/audiostate ('+str(request.method)+')')
+        return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
+@app.route('/api/uisettings/', methods=['POST'])
+def uisettings_url():
+    global add_chin
+    if request.method == 'POST':
+        data = request.get_json()
+        add_chin = data['chin']
+        return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    else:
+        logging.error('Unknown API call to /api/audiostate ('+str(request.method)+')')
+        return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
 if __name__ == '__main__':
     running_flag = mp.Value(ctypes.c_ubyte)

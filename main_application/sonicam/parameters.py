@@ -21,12 +21,12 @@ param_n_image_workers = 3
 param_image_buffer_end = 2
 param_frame_period = 1.0/param_cam_fps
 
-param_flip_video = True
-param_src_force = False
+param_flip_video = False
+param_src_force = True
 param_src_file_i = 0
 param_src_video_path = '../data/'
 param_src_video_suffix = '.mp4'
-param_src_files = ['sample_video_very_easy','sample_video_easy']
+param_src_files = ['recording_eric','sample_video_very_easy','sample_video_easy']
 param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
         str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \
         "/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
@@ -83,7 +83,7 @@ param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 # Webserver
 param_output_every = 2
 
-param_output_style = 'full'
+param_output_style = 'feeds'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 

@@ -106,6 +106,12 @@ class POIManager():
         else:
             return self.poi_dict[str(specific)].getInfo()
 
+    def getBeamformer(self):
+        output_list = []
+        for key,value in self.poi_dict.items():
+            output_list.append(value.getAudio())
+        return output_list
+
     def addPOI(self,poi_id,thumbnail):
         assert poi_id not in self.poi_dict
         self.poi_dict[str(poi_id)] = POI(poi_id,thumbnail)
@@ -183,7 +189,7 @@ class POI():
         return {'id':self.poi_id,'state':self.getState(),'is_known':self.is_known,'importance':self.importance,'name':self.name,'height':self.height,'frame':self.thumbnail['frame']}
 
     def getAudio(self):
-        pass
+        return {'id':self.poi_id,'angle':self.angle*180.0/np.pi,'volume':max(0,min(100,self.volume*100))}
 
     def getState(self):
         if not self.is_visible:

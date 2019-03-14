@@ -131,12 +131,14 @@ class FaceDetector(mp.Process):
 # =============
 class Tracker():
     def __init__(self):
+        self.reset()
+        class ArgumentError(Exception):
+            pass
+
+    def reset(self):
         self.track_filters = []
         self.time_last = time.time()
         self.new_id = 0
-        
-        class ArgumentError(Exception):
-            pass
     
     def predictionUpdate(self,time):
         # logging.info('======= prediction update =======')

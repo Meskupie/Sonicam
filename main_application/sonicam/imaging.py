@@ -114,7 +114,7 @@ class FrameServer(mp.Process):
     def reset(self):
         # Free all buffer indexes
         for i in range(param_image_buffer_length):
-            if self.buffer_index_locked[i] != 1:
+            if self.buffer_index_locked[i] == 1:
                 self.freeBufferIndex(i)
 
         self.run_camera.clear()
