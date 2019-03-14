@@ -74,29 +74,34 @@ class POIManager():
                 else:
                     self.poi_dict[key].is_shown = False
 
+    def updateFromPOIChange(self,poi_id,data):
+        if poi_id == -1:
+            self.background.mute = data['mute']
+            self.background.volume = data['volume']
+        else:
+            self.poi_dict[str(poi_id)].mute = data['mute']
+            self.poi_dict[str(poi_id)].volume = data['volume']
+
     def getFeeds(self):
         output_list = []
         for key,value in self.poi_dict.items():
             output_list.append(value.feed)
         return output_list
 
-    def getPOIs(self):
-        output_list = []
-        for key,value in self.poi_dict.items():
-            output_list.append(value.getInfo())
-            logging.info('==GET==='+str(value.getInfo()))
-            # Put a lock on deletion from missing track
-            value.is_shown = True
-        return output_list
-
-    def getPOIsVerbose(self):
-        output_list = []
-        for key,value in self.poi_dict.items():
-            output_list.append(value.getInfoVerbose())
-            logging.info('==GET==='+str(value.getInfo()))
-            # Put a lock on deletion from missing track
-            value.is_shown = True
-        return output_list
+    def getPOIs(self,specific=None,verbose=False):
+        if specific == None:
+            output_list = []
+            for key,value in self.poi_dict.items():
+                if verbose:
+                    output_list.append(value.getInfoVerbose())
+                else:
+                    output_list.append(value.getInfo())
+                logging.info('==GET==='+str(value.getInfo()))
+                # Put a lock on deletion from missing track
+                value.is_shown = True
+            return output_list
+        else:
+            return self.poi_dict[str(specific)].getInfo()
 
     def addPOI(self,poi_id,thumbnail):
         assert poi_id not in self.poi_dict

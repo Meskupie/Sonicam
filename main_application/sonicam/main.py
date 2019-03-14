@@ -96,7 +96,7 @@ def emitFullFrame(frame_raw,tracks):
 
     ret, frame_encoded = cv2.imencode('.jpg',frame)
     frame_string = base64.b64encode(frame_encoded).decode('utf8')
-    socket.emit('frame',json.dumps(frame_string))
+    socket.emit('frame',frame_string)
 
 def emitFeeds(feeds):    
     socket.emit('feeds',json.dumps(feeds))
@@ -214,13 +214,25 @@ def poi_url():
     else:
         logging.error('Unknown API call to /api/pois/ ('+str(request.method)+')')
 
-@app.route('/api/poisverbose/')
+@app.route('/api/pois/<int:poi_id>', methods=['GET','POST'])
+def poi_url(poi_id):
+    if request.method == 'GET':
+        output = poi_manager.getPOIs(specific=poi_id)
+        return jsonify(output)
+    elif request.method == 'POST':
+        data = request.get_json()
+        poi_manager.updateFromPOIChange(poi_id,data)
+        return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    else:
+        logging.error('Unknown API call to /api/pois/id ('+str(request.method)+')')
+
+@app.route('/api/poisverbose/', methods=['GET'])
 def poiverbose_url():
     if request.method == 'GET':
-        output = poi_manager.getPOIsVerbose()
+        output = poi_manager.getPOIs(verbose=True)
         return jsonify(output)
 
-@app.route('/api/pois/<int:poi_id>')
+@app.route('/api/pois/<int:poi_id>', methods=['GET','POST'])
 def poi_id_url(poi_id):
     pass
 

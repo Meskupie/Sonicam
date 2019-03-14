@@ -8,6 +8,7 @@
             var socket = io.connect('http://localhost:5000');
             socket.on('frame',function(frame) {
                 const imageElm = document.getElementById('image');
+                console.log(frame)
                 imageElm.src = "data:image/jpeg;charset=utf-8;base64,"+frame;
             });
         </script>

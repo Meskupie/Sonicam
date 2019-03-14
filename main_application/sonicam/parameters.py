@@ -15,7 +15,7 @@ if param_jetson:
     param_use_gpu = True
 else:
     param_use_cam = False
-    param_flip_video = False
+    param_flip_video = True
     param_use_gpu = False
 
 # FrameServer
@@ -25,7 +25,7 @@ param_n_image_workers = 3
 param_image_buffer_end = 2
 param_frame_period = 1.0/param_cam_fps
 
-param_src_file = '../data/sample_video_very_very_easy.mp4'
+param_src_file = '../data/sample_video_super_easy.mp4'
 param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
         str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \
         "/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
@@ -84,7 +84,7 @@ param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 # Webserver
 param_output_every = 2
 
-param_output_style = 'feeds'
+param_output_style = 'full'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 
