@@ -99,14 +99,16 @@ def updateLoaded(name=None):
     global loaded_names
     if name != None:
         loaded_names.append(name)
+    logging.info('loaded_names '+str(loaded_names))
+    logging.info('loaded_names '+str(loaded_names_required))
     for n in loaded_names_required:
         if n not in loaded_names:
             return False
     socket.emit('state','playing')
     start_stream()
-    # Reset loaded array
-    loaded_names = ['audio'] #AUDIO (remove defaut)
     return True
+def resetLoaded():
+    loaded_names = ['audio'] #AUDIO (remove defaut)
 
 # =============
 # Stream Control
@@ -119,6 +121,7 @@ def stop_stream():
     queue_dict['frame_server'].put({'type':'stop'})
 
 def load_stream(file):
+    resetLoaded()
     # AUDIO (load signal)
     queue_dict['frame_server'].put({'type':'load','src':param_src_video_path+file+param_src_video_suffix})
 
@@ -323,10 +326,6 @@ def audiostate_url():
 
 
 if __name__ == '__main__':
-    # ============================================
-    # ===== INSERT MULTIPROCESSING WAIT HERE =====
-    # time.sleep(20)
-    # ============================================
     running_flag = mp.Value(ctypes.c_ubyte)
     running_flag.value = 1
     
@@ -343,10 +342,11 @@ if __name__ == '__main__':
         logging.debug('Ready')
         load_stream(param_src_files[param_src_file_i])
         while not updateLoaded():
-            logging.info('Waiting for loaded')
+            logging.debug('Waiting for loaded')
             e.sleep(0.1)
-        logging.info('Playing')
-            
+        logging.debug('Playing')
+
+    # Start webserver    
     try:
         socket.run(app, host='127.0.0.1')
     finally:
