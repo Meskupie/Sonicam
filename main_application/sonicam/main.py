@@ -215,7 +215,7 @@ def poi_url():
         logging.error('Unknown API call to /api/pois/ ('+str(request.method)+')')
 
 @app.route('/api/pois/<int:poi_id>', methods=['GET','POST'])
-def poi_url(poi_id):
+def poi_id_url(poi_id):
     if request.method == 'GET':
         output = poi_manager.getPOIs(specific=poi_id)
         return jsonify(output)
@@ -231,10 +231,6 @@ def poiverbose_url():
     if request.method == 'GET':
         output = poi_manager.getPOIs(verbose=True)
         return jsonify(output)
-
-@app.route('/api/pois/<int:poi_id>', methods=['GET','POST'])
-def poi_id_url(poi_id):
-    pass
 
 
 if __name__ == '__main__':

@@ -25,7 +25,7 @@ param_n_image_workers = 3
 param_image_buffer_end = 2
 param_frame_period = 1.0/param_cam_fps
 
-param_src_file = '../data/sample_video_super_easy.mp4'
+param_src_file = '../data/sample_video_very_easy.mp4'
 param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
         str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \
         "/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
