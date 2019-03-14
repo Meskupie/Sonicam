@@ -42,15 +42,6 @@ const person = (props) => {
                 />
                 <Volume
                     widthHeight={props.widthHeight}
-                    volume={props.normalizerVolume}
-                    volumeWidth={props.volumeWidth}
-                    voulumeSpacing={props.voulumeSpacing}
-                    type={"normalizer"}
-                    status={props.volumeState}
-                    isMuted={props.isMuted}
-                />
-                <Volume
-                    widthHeight={props.widthHeight}
                     volume={props.multiplierVolume}
                     volumeWidth={props.volumeWidth}
                     voulumeSpacing={props.voulumeSpacing}

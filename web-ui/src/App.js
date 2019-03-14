@@ -5,14 +5,13 @@ import Layout from './containers/Layout/Layout';
 import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
 import { getVideoFeed } from './Functions/GetVideoFeed/GetVideoFeed';
-import { httpPost } from './Functions/HttpPost/HttpPost';
 
 const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
 //pixels with stetching instead of 480
 const APP_HEIGHT = 451;
-const ROWS = 2;
-const COLUMNS = 4;
+// const ROWS = 2;
+// const COLUMNS = 4;
 const WIDTH_HEIGHT = 150;
 const IMAGE_WIDTH_HEIGHT = 115;
 const VOLUME_WIDTH = 12;
@@ -24,6 +23,8 @@ const SPACING_Y = 25;
 const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
 var holdPOIOrBackground;
 var holdUserVolumeButton;
+// var sendPOSTVolume = true;
+
 
 var isEqual = function (value, other) {
 
@@ -87,22 +88,6 @@ var isEqual = function (value, other) {
 
 };
 
-var httpPostPOIs = function (POIs){
-  let postPOIs = POIs.map(POI => {
-    return (
-      {
-        id: POI.id,
-        name: POI.name,
-        height: POI.height,
-        mute: POI.mute,
-        volume: POI.volumeMultiplier
-      }
-    )
-  })
-
-  httpPost(postPOIs, '/api/pois/');
-}
-
 class App extends Component {
   constructor(props) {
     super(props);
@@ -147,10 +132,12 @@ class App extends Component {
   }
 
   componentDidMount() {
+
   }
 
   masterVolumeChangeHandler = (event) => {
     this.setState({ masterVolume: event.target.value / 100 });
+    const POIs = [...this.state.POIs];
 
     for (var i = 0; i < this.state.POIs.length; i++) {
       if ((this.state.POIs[i].volumeMultiplier * this.state.masterVolume + this.state.POIs[i].volumeNormalizer) > 3) {
@@ -161,12 +148,14 @@ class App extends Component {
         POI.volumeMultiplier = ((3 - this.state.POIs[i].volumeNormalizer) / this.state.masterVolume);
         POI.volumeMultiplier = POI.volumeMultiplier.toFixed(2);
 
-        const POIs = [...this.state.POIs];
-
         POIs[i] = POI;
+
         this.setState({ POIs: POIs });
       }
     }
+
+    this.httpPost(this.httpPostPreparePOIs(POIs), '/api/pois/');
+
   }
 
   userVolumeMouseDownHandler = (event, upOrDown) => {
@@ -190,6 +179,8 @@ class App extends Component {
 
     const POIs = [...this.state.POIs];
     POIs[personIndex] = POI;
+
+    this.httpPost(this.httpPostPreparePOIs(POIs), '/api/pois/');
 
     this.setState({ POIs: POIs });
 
@@ -219,6 +210,8 @@ class App extends Component {
     const POIs = [...this.state.POIs];
     POIs[personIndex] = POI;
 
+    this.httpPost(this.httpPostPreparePOIs(POIs), '/api/pois/');
+
     this.setState({ POIs: POIs });
 
     if (delay >= 50) {
@@ -239,7 +232,7 @@ class App extends Component {
   }
 
   sourceClickedHandler = (selectedId) => {
-    console.log("source clicked");
+    // console.log("source clicked");
     this.setState({ selectedSource: selectedId });
   }
 
@@ -290,7 +283,7 @@ class App extends Component {
       POIs.push(selectedPOI);
     }
 
-    httpPostPOIs(POIs);
+    this.httpPostPOIsAndGet(POIs);
 
     this.setState({ POIs: POIs });
 
@@ -335,16 +328,16 @@ class App extends Component {
 
       const personIndex = POIs.findIndex(x => x.id === selectedId);
 
-      const POI = {
-        ...POIs[personIndex]
-      }
+      // const POI = {
+      //   ...POIs[personIndex]
+      // }
 
       POIs.splice(personIndex, 1)
 
       for (let i = personIndex; i < POIs.length; i++) {
         POIs[i].position[0] = POIs[i].position[0] - 1;
         if (POIs[i].position[0] === 0) {
-          if (POIs[i].position[1] == 1) {
+          if (POIs[i].position[1] === 1) {
 
           }
           else {
@@ -363,7 +356,7 @@ class App extends Component {
     this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
 
-    httpPostPOIs(this.state.POIs);
+    this.httpPost(this.httpPostPreparePOIs(this.state.POIs), '/api/pois/');
 
     holdPOIOrBackground = setTimeout(() => { this.POIHeldHandler(selectedId) }, 400);
   }
@@ -391,56 +384,156 @@ class App extends Component {
   }
 
   POIMouseUpHandler = (event) => {
-    console.log('POI released');
+    // console.log('POI released');
     clearTimeout(holdPOIOrBackground);
     this.setState({ POIClicked: false });
   }
 
   POIMouseOutHandler = (event) => {
-    console.log("POI mouse out");
+    // console.log("POI mouse out");
     clearTimeout(holdPOIOrBackground);
     this.setState({ POIClicked: false });
   }
 
   POIHeldHandler(selectedId) {
-    console.log('POI with id ' + selectedId + ' held');
+    // console.log('POI with id ' + selectedId + ' held');
     if (selectedId !== -1) {
       this.setState({ POIHeld: selectedId });
     }
   }
 
   backgroundMouseDownHandler = (event) => {
-    console.log('background mouse down');
+    // console.log('background mouse down');
     this.setState({ backgroundHeld: false });
     this.setState({ POIHeld: null });
     this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
 
-    var postPOIs = this.state.POIs.map(POI => {
-      return (
-        {
-          id: POI.id,
-          name: POI.name,
-          height: POI.height,
-          mute: POI.mute,
-          volume: POI.volumeMultiplier
-        }
-      )
-    })
-    httpPost(postPOIs, '/api/pois/');
+    this.httpPost(this.httpPostPreparePOIs(this.state.POIs), '/api/pois/');
 
     holdPOIOrBackground = setTimeout(() => { this.backgroundHeldHandler() }, 400);
   }
 
   backgroundMouseUpHandler = (event) => {
-    console.log('background released');
+    // console.log('background released');
     clearTimeout(holdPOIOrBackground);
     // this.setState({POIClicked: false});
   }
 
   backgroundHeldHandler() {
-    console.log('background held');
+    // console.log('background held');
     this.setState({ backgroundHeld: true });
+  }
+
+  httpPost = (data, url) => {
+    // console.log("Posting data to backend...");
+    // console.log(postPOIs);
+    fetch('http://localhost:8080/http://localhost:5000' + url, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }).then(function (response) {
+      if (response.status !== 200) {
+        console.log('Looks like there was a problem. Status Code: ' +
+          response.status);
+        return;
+      }
+      // console.log(response);
+      return response.json().then((data) => {
+        // console.log("response data: " + data);
+        // console.log(data);
+      });
+    }).then((data) => {
+      // sendPOSTVolume = true;
+    })
+      .catch(function (err) {
+        console.log('Fetch Error :-S', err);
+      });;
+  }
+
+  httpGet = (url) => {
+    fetch('http://localhost:8080/http://localhost:5000'+ url, {
+      method: "GET",
+    })
+      .then(
+        (response) => {
+          if (response.status !== 200) {
+            console.log('Looks like there was a problem. Status Code: ' +
+              response.status);
+            return;
+          }
+
+          // Examine the text in the response
+          response.json().then((data) => {
+            return(data);
+          });
+        }
+      )
+      .catch(function (err) {
+        console.log('Fetch Error :-S', err);
+      });
+    // console.log("getting");
+  }
+
+  httpPostPOIsAndGet = (POIs) => {
+    let postPOIs = this.httpPostPreparePOIs(POIs);
+
+    // console.log("Posting data to backend...");
+    // console.log(postPOIs);
+    fetch('http://localhost:8080/http://localhost:5000/api/pois/', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postPOIs),
+    }).then(function (response) {
+      // console.log(response);
+      return response.json().then((data) => {
+        // console.log("response data: " + data);
+        // console.log(data);
+      });
+    }).then((data) => {
+      fetch('http://localhost:8080/http://localhost:5000/api/poisverbose/', {
+        method: "GET",
+      })
+        .then(
+          (response) => {
+            if (response.status !== 200) {
+              console.log('Looks like there was a problem. Status Code: ' +
+                response.status);
+              return;
+            }
+
+            // console.log("setting state")
+            // this.setState({ newPOIs: data });
+
+            // Examine the text in the response
+            response.json().then((data) => {
+
+            });
+          }
+        )
+        .catch(function (err) {
+          console.log('Fetch Error :-S', err);
+        });
+      // console.log("getting");
+    });
+  }
+
+  httpPostPreparePOIs = (POIs) => {
+    let postPOIs = POIs.map(POI => {
+      return (
+        {
+          id: POI.id,
+          mute: POI.mute,
+          volume: POI.volumeMultiplier * this.state.masterVolume
+        }
+      )
+    });
+
+    return postPOIs;
   }
 
   // onMouseOut can help with mouse leaving input area
@@ -487,7 +580,7 @@ class App extends Component {
         />
     }
     else if (this.state.POIHeld !== null) {
-      console.log(this.state.POIs);
+      // console.log(this.state.POIs);
       var POI = this.state.POIs.find(x => x.id === this.state.POIHeld);
       var row = (POI.position[1] % 2) + 1;
       addPerson =
