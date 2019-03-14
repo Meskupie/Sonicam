@@ -208,6 +208,7 @@ class App extends Component {
       selectedPOI.volumeNormalizer = 0;
       selectedPOI.soundStatus = "normal";
       selectedPOI.mute = true;
+      selectedPOI.name= "name"
 
 
       POIs.push(selectedPOI);
@@ -230,7 +231,7 @@ class App extends Component {
     this.setState({ POIs: POIs });
 
     getVideoFeed((err, feeds) => {
-      
+
       let parsedImage = JSON.parse(feeds);
       this.setState({ parsedImage });
     });

@@ -89,7 +89,7 @@ class People extends Component {
                         imgSource={image}
                         borderWidth={borderWidth}
                         isBackground={isBackground}
-                        name={POI.id}
+                        name={POI.name}
                         isSelected={isSelected}
                         shouldRefresh={this.props.shouldRefresh}
                         isHeld={POI.id === this.props.POIHeld}
