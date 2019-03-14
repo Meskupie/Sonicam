@@ -22,12 +22,10 @@ param_image_buffer_end = 2
 param_frame_period = 1.0/param_cam_fps
 
 param_flip_video = True
-param_src_force = True
-param_src_file = -1
+param_src_force = False
+param_src_file_i = 0
 param_src_video_path = '../data/'
 param_src_video_suffix = '.mp4'
-param_src_audio_path = ''
-param_src_audio_suffix = ''
 param_src_files = ['sample_video_very_easy','sample_video_easy']
 param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
         str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \

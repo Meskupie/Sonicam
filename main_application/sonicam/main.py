@@ -86,22 +86,27 @@ def updateReady(name=None):
         ready_names.append(name)
     for n in ready_names_required:
         if n not in ready_names:
-            return
+            return False
     socket.emit('state','ready')
+    return True
 
 # =============
 # Loading Control
 # =============
 loaded_names = ['audio'] #AUDIO (remove defaut)
 loaded_names_required = ['camera','audio']
-def updateLoaded(name):
-    names.append(name)
-    for n in names_required:
-        if n not in names:
-            return
+def updateLoaded(name=None):
+    global loaded_names
+    if name != None:
+        loaded_names.append(name)
+    for n in loaded_names_required:
+        if n not in loaded_names:
+            return False
     socket.emit('state','playing')
     start_stream()
+    # Reset loaded array
     loaded_names = ['audio'] #AUDIO (remove defaut)
+    return True
 
 # =============
 # Stream Control
@@ -115,7 +120,7 @@ def stop_stream():
 
 def load_stream(file):
     # AUDIO (load signal)
-    queue_dict['frame_server'].put({'type':'load','src':param_src_path+file+param_src_suffix})
+    queue_dict['frame_server'].put({'type':'load','src':param_src_video_path+file+param_src_video_suffix})
 
 def start_stream():
     # AUDIO (start signal)
@@ -159,10 +164,12 @@ def spinServiceJobs(flag,job_queue):
         else:
             try:
                 if job['type'] == 'ready':
+                    logging.debug('Ready from '+str(job['src']))
                     if job['src'] == 'FaceDetector':
                         updateReady('face')
 
                 elif job['type'] == 'loaded':
+                    logging.info('Loaded from '+str(job['src']))
                     if job['src'] == 'CameraReader':
                         updateLoaded('camera')
 
@@ -291,7 +298,7 @@ def poiverbose_url():
 def files_url():
     if request.method == 'GET':
         # Reset the currently running stream
-        stop_steam()
+        stop_stream()
         updateReady()
         return jsonify(param_src_files)
     elif request.method == 'POST':
@@ -326,7 +333,20 @@ if __name__ == '__main__':
     threads = []
     threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['master']))
     threads.append(e.spawn(waitForInput,running_flag,threads))
-    
+
+    # Force start file
+    if param_src_force:
+        logging.info('Loading file in headless mode')
+        while not updateReady():
+            logging.debug('Waiting for ready')
+            e.sleep(0.1)
+        logging.debug('Ready')
+        load_stream(param_src_files[param_src_file_i])
+        while not updateLoaded():
+            logging.info('Waiting for loaded')
+            e.sleep(0.1)
+        logging.info('Playing')
+            
     try:
         socket.run(app, host='127.0.0.1')
     finally:

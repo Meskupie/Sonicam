@@ -300,7 +300,7 @@ class ImageReadWorker(mp.Process):
             logging.debug('Reporting frame captured to index '+str(buffer_index))
             self.parent_queue.put({'type':'camera','index':buffer_index})
             # Delay
-            if param_src_file == -1:
+            if param_src_file_i == -1:
                 pass
             else:
                 time.sleep(max(0,(1/hz)-(time.time()-start)))
