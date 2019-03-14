@@ -22,7 +22,7 @@ const BUTTON_SMALL_WIDTH = 70;
 const BUTTON_LARGE_WIDTH = 215;
 const SPACING_Y = 25;
 const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
-const ONJETSON = false;
+var ONJETSON = false;
 var holdPOIOrBackground;
 var holdUserVolumeButton;
 // var sendPOSTVolume = true;
@@ -138,6 +138,9 @@ class App extends Component {
         this.setState({ parsedPOIs });
       }
     });
+    if(window.screen.width < 900){
+      ONJETSON = true;
+    }
   }
 
   masterVolumeChangeHandler = (event) => {
@@ -526,8 +529,6 @@ class App extends Component {
 
     return postPOIs;
   }
-
-  // onMouseOut can help with mouse leaving input area
 
   render() {
 

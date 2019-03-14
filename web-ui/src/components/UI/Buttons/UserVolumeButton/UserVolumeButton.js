@@ -31,8 +31,8 @@ class UserVolumeButton extends Component {
 
         return (
             <div className={classes.VolumeButton} style={userVolumeButtonStyle}>
-                <div className={classes.ButtonMinus} onMouseDown={this.props.clickedMinus} onMouseUp={this.props.onMouseUpOrOut} onMouseOut={this.props.onMouseUpOrOut}></div>
-                <div className={classes.ButtonPlus} onMouseDown={this.props.clickedPlus} onMouseUp={this.props.onMouseUpOrOut} onMouseOut={this.props.onMouseUpOrOut}></div>
+                <div className={classes.ButtonMinus} onPointerDown={this.props.clickedMinus} onPointerUp={this.props.onPointerUpOrOut} onPointerOut={this.props.onPointerUpOrOut}></div>
+                <div className={classes.ButtonPlus} onPointerDown={this.props.clickedPlus} onPointerUp={this.props.onPointerUpOrOut} onPointerOut={this.props.onPointerUpOrOut}></div>
                 <div className={classes.VolumeButtonContainer} style={volumeButtonContainerStyle}>
                     <div className={classes.Minus} style={minusPlusStyle}>
 

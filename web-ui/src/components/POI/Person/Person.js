@@ -63,8 +63,8 @@ const person = (props) => {
                     widthHeight={props.imgWidthHeight}
                     imgSource={props.imgSource}
                     onClick={props.onClick}
-                    onMouseUp={props.onMouseUp}
-                    onMouseOut={props.onMouseOut}
+                    onPointerUp={props.onPointerUp}
+                    onPointerOut={props.onPointerOut}
                     onDoubleClick={props.onDoubleClick}
                     isSelected={props.isSelected}
                     isBackground={props.isBackground}
