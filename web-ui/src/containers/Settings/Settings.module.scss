@@ -54,6 +54,10 @@
     animation: none !important;
 }
 
+.NoClick{
+    pointer-events: none
+}
+
 .StatusContainer{
     height: 20px;
     width: 20px;

@@ -1,10 +1,15 @@
 import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:5000');
+const socketPOIFeed = openSocket('http://localhost:5000');
+const socketVideoFeedState = openSocket('http://localhost:5000');
+const socketVideoFeed = openSocket('http://localhost:5000');
+
 function getPOIFeed(cb) {
-  socket.on('feeds', feeds => cb(null, feeds));
+  socketPOIFeed.on('feeds', feeds => cb(null, feeds));
 }
-const socket2 = openSocket('http://localhost:5000');
 function getVideoFeedState(cb){
-  socket2.on('state', state => cb(null, state));
+  socketVideoFeedState.on('state', state => cb(null, state));
 }
-export { getPOIFeed, getVideoFeedState };
+function getVideoFeed(cb){
+  socketVideoFeed.on('frame', frame => cb(null, frame));
+}
+export { getPOIFeed, getVideoFeedState, getVideoFeed };

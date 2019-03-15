@@ -5,13 +5,23 @@ class VideoFeed extends Component {
     render() {
 
         var videoFeedStyle = {
-            top: this.props.offsetTop
+            top: this.props.offsetTop - 3,
+            left: this.props.offsetLeft - 3,
+            width: this.props.width,
+            height: this.props.height,
+            border: "3px solid #21F8B6"
+        }
+
+        var image = " ";
+
+        if (this.props.image !== undefined && this.props.image !== null) {
+            image = "data:image/jpeg;charset=utf-8;base64," + this.props.image;
         }
 
         return (
-            <div className={classes.VideoFeed}>
+            <img src={image} style={videoFeedStyle} alt=" " className={classes.VideoFeed}>
 
-            </div>
+            </img>
         );
     }
 }

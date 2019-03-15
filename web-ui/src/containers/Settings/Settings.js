@@ -39,6 +39,7 @@ class Settings extends PureComponent {
                 let StatusLoadingSpinnerClass = [classes.LoadingSpinner];
                 let StatusPlayingSpinnerClass = [classes.PlayingSpinner];
                 let SpinnerBackgroundClass = [classes.SpinnerBackground];
+                let SourceSubSettingClass = [classes.Source, classes.TextBackground];
 
                 //Disable this when loading
                 StatusLoadingSpinnerClass.push(classes.Hidden);
@@ -46,6 +47,7 @@ class Settings extends PureComponent {
                 if (source === this.props.selectedSource) {
                     if (this.props.videoState === "ready") {
                         StatusPlayingSpinnerClass.push(classes.Hidden);
+                        SourceSubSettingClass.push(classes.NoClick);
                     }
                     else if (this.props.videoState === "playing") {
                         StatusLoadingSpinnerClass.push(classes.Hidden);
@@ -93,7 +95,7 @@ class Settings extends PureComponent {
 
                 return (
                     <Aux key={source}>
-                        <div style={subSettingStyle} className={[classes.Source, classes.TextBackground].join(' ')} onClick={(event) => this.props.sourceClickedHandler(source)}>
+                        <div style={subSettingStyle} className={SourceSubSettingClass.join(' ')} onClick={(event) => this.props.sourceClickedHandler(source)}>
                             {status}
                             {source}
                         </div>

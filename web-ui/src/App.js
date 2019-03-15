@@ -5,13 +5,14 @@ import Layout from './containers/Layout/Layout';
 import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
 import VideoFeed from './containers/VideoFeed/VideoFeed';
-import { getPOIFeed, getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeed';
+import { getPOIFeed, getVideoFeedState, getVideoFeed } from './Functions/GetVideoFeed/GetVideoFeed';
 //import { getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeedState';
 
 const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
 //pixels with stetching instead of 480
-var APP_HEIGHT = 451;
+var APP_HEIGHT = 451
+var APP_HEIGHT_STYLE = APP_HEIGHT;
 // const ROWS = 2;
 // const COLUMNS = 4;
 const WIDTH_HEIGHT = 150;
@@ -19,7 +20,9 @@ const IMAGE_WIDTH_HEIGHT = 115;
 const VOLUME_WIDTH = 12;
 const SPACING_UI = 16;
 //For video feed with resolution: 768x432
-const VIDEO_FEED_HEIGHT = 432 + SPACING_UI * 2;
+const VIDEO_FEED_HEIGHT = 432;
+const VIDEO_FEED_WIDTH = 768;
+const VIDEO_FEED_OFFSET = VIDEO_FEED_HEIGHT + SPACING_UI * 2;
 const BUTTON_HEIGHT = 70;
 const BUTTON_SMALL_WIDTH = 70;
 const BUTTON_LARGE_WIDTH = 215;
@@ -43,6 +46,7 @@ const initialState = {
   selectedSource: null,
   parsedPOIs: undefined,
   videoState: "null",
+  videoFeed: null,
   displayNoNewPerson: false,
   POIs: [
     {
@@ -142,10 +146,12 @@ class App extends Component {
     });
     getPOIFeed((err, feeds) => {
       let parsedPOIs = JSON.parse(feeds);
-      if (!isEqual(this.state.parsedPOIs, parsedPOIs)) {
-        this.setState({ parsedPOIs });
-      }
+      this.setState({ parsedPOIs });
     });
+    getVideoFeed((err, videoFeed) => {
+      this.setState({ videoFeed: videoFeed });
+    });
+
     if (window.screen.width < 900) {
       ON_JETSON = true;
     }
@@ -262,10 +268,18 @@ class App extends Component {
   clickedShowSceneStatusHandler = () => {
     let showSceneStatusTemp = !this.state.showSceneStatus
     if (showSceneStatusTemp) {
-      APP_HEIGHT = APP_HEIGHT + VIDEO_FEED_HEIGHT;
+      APP_HEIGHT_STYLE = APP_HEIGHT_STYLE + VIDEO_FEED_OFFSET;
+      let postData={
+        chin: true
+      }
+      this.httpPost(postData, '/api/uisettings/')
     }
     else {
-      APP_HEIGHT = APP_HEIGHT - VIDEO_FEED_HEIGHT;
+      APP_HEIGHT_STYLE = APP_HEIGHT_STYLE - VIDEO_FEED_OFFSET;
+      let postData={
+        chin: false
+      }
+      this.httpPost(postData, '/api/uisettings/')
     }
     this.setState({ showSceneStatus: showSceneStatusTemp });
   }
@@ -346,7 +360,7 @@ class App extends Component {
       selectedPOI.volumeMultiplier = (2.25).toFixed(2);
       selectedPOI.volumeNormalizer = 0;
       selectedPOI.soundStatus = "normal"
-      selectedPOI.mute = true;
+      selectedPOI.mute = false;
       selectedPOI.name = ""
 
 
@@ -541,10 +555,6 @@ class App extends Component {
       body: JSON.stringify(postPOIs),
     }).then(function (response) {
       // console.log(response);
-      return response.json().then((data) => {
-        // console.log("response data: " + data);
-        // console.log(data);
-      });
     }).then((data) => {
       fetch('http://localhost:8080/http://localhost:5000/api/poisverbose/', {
         method: "GET",
@@ -602,7 +612,7 @@ class App extends Component {
   render() {
     var appStyle = {
       width: APP_WIDTH + "px",
-      height: APP_HEIGHT + "px",
+      height: APP_HEIGHT_STYLE + "px",
       //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
       //and transform moves the UI to the corners of window after scaling
       // transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
@@ -611,7 +621,7 @@ class App extends Component {
     if (ON_JETSON) {
       appStyle = {
         width: APP_WIDTH + "px",
-        height: APP_HEIGHT + "px",
+        height: APP_HEIGHT_STYLE + "px",
         //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
         //and transform moves the UI to the corners of window after scaling
         transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
@@ -622,11 +632,15 @@ class App extends Component {
     var settings = null;
     var videoFeed = null;
 
-    if(this.state.showSceneStatus){
+    if (this.state.showSceneStatus) {
       videoFeed =
-        <VideoFeed>
-
-        </VideoFeed>
+        <VideoFeed
+          offsetTop={APP_HEIGHT + SPACING_UI}
+          offsetLeft={SPACING_UI}
+          height={VIDEO_FEED_HEIGHT}
+          width={VIDEO_FEED_WIDTH}
+          image={this.state.videoFeed}
+        />
     }
     if (this.state.displaySettings) {
       settings =
@@ -722,6 +736,7 @@ class App extends Component {
         />
         {addPerson}
         {settings}
+        {videoFeed}
       </div>
     );
   }
