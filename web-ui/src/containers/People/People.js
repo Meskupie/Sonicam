@@ -92,8 +92,8 @@ class People extends PureComponent {
                         multiplierVolume={multiplierVolume}
                         soundState={soundState}
                         onClick={(event) => this.props.onPOIClick(event, POI.id)}
-                        onMouseUp={(event) => this.props.onPOIMouseUp(event)}
-                        onMouseOut={(event) => this.props.onPOIMouseOut(event)}
+                        onPointerUp={(event) => this.props.onPOIMouseUp(event)}
+                        onPointerOut={(event) => this.props.onPOIMouseOut(event)}
                         onDoubleClick={(event) => this.props.onPOIDoubleClick(event, POI.id)}
                         imgSource={image}
                         borderWidth={borderWidth}
@@ -111,7 +111,7 @@ class People extends PureComponent {
         });
 
         return (
-            <div className={classes.PeopleContainer} style={personsContainerStyle} onMouseDown={this.props.onBackgroundMouseDown} onMouseUp={this.props.onBackgroundMouseUp}>
+            <div className={classes.PeopleContainer} style={personsContainerStyle} onPointerDown={this.props.onBackgroundMouseDown} onPointerUp={this.props.onBackgroundMouseUp}>
                 {persons}
             </div>
         );
