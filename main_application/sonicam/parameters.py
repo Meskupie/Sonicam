@@ -32,7 +32,7 @@ param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(para
         "/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
         
 # FaceDetector
-param_detector_thresholds = [0.8, 0.8, 0.8]
+param_detector_thresholds = [0.7, 0.7, 0.8]
 
 param_scale_choice = 1
 if param_scale_choice == 0:
@@ -57,7 +57,7 @@ else:
     param_tf_mtcnn_config = tf.ConfigProto(log_device_placement=False)
     
 # Beamformer
-param_ignore_audio = True
+param_ignore_audio = False
 param_audio_url = 'http://localhost:7000'
 param_fs = 44100
 param_blocksize = param_fs // 100
@@ -83,7 +83,7 @@ param_fov_l_y = (param_frame_shape[0]/(2*math.tan(param_aov_y/2)))
 param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 
 # Webserver
-param_output_every = 2
+param_output_every = 4
 
 param_output_style = 'feeds'
 param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))

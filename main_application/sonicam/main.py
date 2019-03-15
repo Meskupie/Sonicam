@@ -29,8 +29,9 @@ logging.basicConfig(level=logging.INFO,
                     #filename='log/sonicam.log',
                     #filemode='w'
                     )
-logging.getLogger('socketio').setLevel(logging.ERROR)
-logging.getLogger('engineio').setLevel(logging.ERROR)
+logging.getLogger('socketio').setLevel(logging.WARNING)
+logging.getLogger('engineio').setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
 install_mp_handler()
 
 # =============
@@ -101,11 +102,10 @@ loaded_names_required = ['camera','audio']
 def updateLoaded(name=None):
     if name != None:
         loaded_names.append(name)
-    logging.info('loaded_names '+str(loaded_names))
-    logging.info('loaded_names '+str(loaded_names_required))
     for n in loaded_names_required:
         if n not in loaded_names:
             return False
+    logging.info('Hi there, I have loaded and am playing')
     socket.emit('state','playing')
     start_stream()
     return True
@@ -118,11 +118,13 @@ def resetLoaded():
 # Stream Control
 # =============
 def ended_stream():
+    resetLoaded()
     tracker.reset()
     poi_manager.reset()
     socket.emit('state','eof')
 
 def stop_stream():
+    resetLoaded()
     tracker.reset()
     poi_manager.reset()
     if not param_ignore_audio:
@@ -343,8 +345,10 @@ def audiostate_url():
         data = request.get_json()
         logging.info("got data from audiostate: " + str(data))
         if data['state'] == 'ready':
+            logging.info('received ready audio')
             updateReady('audio')
         elif data['state'] == 'loaded':
+            logging.info('received loaded audio')
             updateLoaded('audio')
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     else:

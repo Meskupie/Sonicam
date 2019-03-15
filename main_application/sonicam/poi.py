@@ -41,7 +41,8 @@ class POIManager():
                     del self.poi_dict[key]
                 else:
                     self.poi_dict[key].is_visible = False
-
+                    self.poi_dict[key].updateFeed(inplace=True)
+        
     def updateFromDetection(self,tracks,frame_past):
         for track in tracks:
             poi_id = track.track_id
@@ -59,7 +60,7 @@ class POIManager():
     def updateFromUIChange(self,response):
         response_ids = []
         for poi in response:
-            logging.info('==POST=='+str(poi))
+            #logging.info('==POST=='+str(poi))
             poi_id = poi['id']
             if poi_id == -1:
                 self.background.mute = poi['mute']
@@ -99,7 +100,7 @@ class POIManager():
                     output_list.append(value.getInfoVerbose())
                 else:
                     output_list.append(value.getInfo())
-                logging.info('==GET==='+str(value.getInfo()))
+                #logging.info('==GET==='+str(value.getInfo()))
                 # Put a lock on deletion from missing track
                 value.is_shown = True
             return output_list
@@ -109,6 +110,8 @@ class POIManager():
     def getBeamformer(self):
         output_list = [self.background.getAudio()]
         for key,value in self.poi_dict.items():
+            if value.getState() == 'lost':
+                continue
             output_list.append(value.getAudio())
         return output_list
 
@@ -208,5 +211,12 @@ class POI():
         self.thumbnail_time = time.time()
         self.thumbnail = {'id':self.poi_id,'frame':thumbnail}
 
-    def updateFeed(self,headfeed):
-        self.feed = {'id':self.poi_id,'frame':headfeed,'state':self.getState()}
+    def updateFeed(self,headfeed=None,inplace=False):
+        if inplace:
+            del self.feed['state']
+            self.feed['state'] = self.getState()
+        else:
+            self.feed = {'id':self.poi_id,'frame':headfeed,'state':self.getState()}
+        
+        
+        

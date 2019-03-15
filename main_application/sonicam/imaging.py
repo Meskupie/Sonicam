@@ -292,7 +292,10 @@ class ImageReadWorker(mp.Process):
         while self.run_event.is_set() and self.cap.isOpened():
             start = time.time()
             ret,frame = self.cap.read()
-            if not ret: break # broken video capture object
+            if not ret:
+                self.cap.release()
+                self.parent_queue.put({'type':'eof'})
+                break # broken video capture object
             if param_flip_video:
                 buffer_index = self.newFrameToBuffer(cv2.flip(frame, -1))
             else:
@@ -304,10 +307,6 @@ class ImageReadWorker(mp.Process):
                 pass
             else:
                 time.sleep(max(0,(1/hz)-(time.time()-start)))
-        if self.cap.isOpened():
-            self.cap.release()
-        else:
-            self.parent_queue.put({'type':'eof'})
                 
     def killSelf(self):
         if self.cap.isOpened():
