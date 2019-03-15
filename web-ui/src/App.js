@@ -4,6 +4,7 @@ import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
 import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
+import VideoFeed from './containers/VideoFeed/VideoFeed';
 import { getPOIFeed, getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeed';
 //import { getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeedState';
 
@@ -17,14 +18,17 @@ const WIDTH_HEIGHT = 150;
 const IMAGE_WIDTH_HEIGHT = 115;
 const VOLUME_WIDTH = 12;
 const SPACING_UI = 16;
+//For video feed with resolution: 768x432
+const VIDEO_FEED_HEIGHT = 432 + SPACING_UI * 2;
 const BUTTON_HEIGHT = 70;
 const BUTTON_SMALL_WIDTH = 70;
 const BUTTON_LARGE_WIDTH = 215;
 const SPACING_Y = 25;
 const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
-var ONJETSON = false;
+var ON_JETSON = false;
 var holdPOIOrBackground;
 var holdUserVolumeButton;
+var displayNoNewPersonTimeout;
 var toggleEqualizerButton = true;
 // var sendPOSTVolume = true;
 const initialState = {
@@ -39,6 +43,7 @@ const initialState = {
   selectedSource: null,
   parsedPOIs: undefined,
   videoState: "null",
+  displayNoNewPerson: false,
   POIs: [
     {
       id: -1,
@@ -47,9 +52,9 @@ const initialState = {
       is_known: null,
       importance: null,
       name: "Background",
-      state: "normal",
+      soundStatus: "normal",
       mute: false,
-      volumeMultiplier: (1).toFixed(2),
+      volumeMultiplier: (2.25).toFixed(2),
       volumeNormalizer: 0,
       position: [1, 1],
     }],
@@ -132,7 +137,7 @@ class App extends Component {
       this.setState({ videoState: videoState });
       if (this.state.videoState === "eof") {
         this.reset();
-        this.setState({displaySettings: true});
+        this.setState({ displaySettings: true });
       }
     });
     getPOIFeed((err, feeds) => {
@@ -142,7 +147,7 @@ class App extends Component {
       }
     });
     if (window.screen.width < 900) {
-      ONJETSON = true;
+      ON_JETSON = true;
     }
   }
 
@@ -165,8 +170,11 @@ class App extends Component {
       }
     }
 
-    this.httpPost(this.httpPostPreparePOIs(POIs), '/api/pois/');
-
+    //Sending the event.target.value in the POST becuase of the asynchronous nature of setState.
+    //If the master volume is pulled from the state in the POST request then it will be outdated.
+    //This way, the master volume is pulled from the event on it's change such that the POST
+    //request gets the most recent value.
+    this.httpPost(this.httpPostPreparePOIs(POIs, event.target.value / 100), '/api/pois/');
   }
 
   userVolumeMouseDownHandler = (event, upOrDown) => {
@@ -178,13 +186,13 @@ class App extends Component {
     }
 
     if (upOrDown === 'up') {
-      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) < 3) {
-        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .01).toFixed(2);
+      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer + 0.03) < 3) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .03).toFixed(2);
       }
     }
     else if (upOrDown === 'down') {
-      if (POI.volumeMultiplier - .01 > 0) {
-        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .01).toFixed(2);
+      if (POI.volumeMultiplier - .03 > 0) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .03).toFixed(2);
       }
     }
 
@@ -208,13 +216,13 @@ class App extends Component {
     }
 
     if (upOrDown === 'up') {
-      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) + .02 <= 3) {
-        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .02).toFixed(2);
+      if ((POI.volumeMultiplier * this.state.masterVolume + POI.volumeNormalizer) + .03 <= 3) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) + .03).toFixed(2);
       }
     }
     else if (upOrDown === 'down') {
-      if (POI.volumeMultiplier - .02 > 0) {
-        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .02).toFixed(2);
+      if (POI.volumeMultiplier - .03 > 0) {
+        POI.volumeMultiplier = (parseFloat(POI.volumeMultiplier) - .03).toFixed(2);
       }
     }
 
@@ -251,6 +259,37 @@ class App extends Component {
     this.setState({ displaySettings: true });
   }
 
+  clickedShowSceneStatusHandler = () => {
+    let showSceneStatusTemp = !this.state.showSceneStatus
+    if (showSceneStatusTemp) {
+      APP_HEIGHT = APP_HEIGHT + VIDEO_FEED_HEIGHT;
+    }
+    else {
+      APP_HEIGHT = APP_HEIGHT - VIDEO_FEED_HEIGHT;
+    }
+    this.setState({ showSceneStatus: showSceneStatusTemp });
+  }
+
+  setSoundStatus = (status, id) => {
+    const personIndex = this.state.POIs.findIndex(x => x.id === id);
+
+    const POIs = [...this.state.POIs];
+
+    if (POIs[personIndex].soundStatus !== status) {
+      POIs[personIndex].soundStatus = status;
+      this.setState({ POIs: POIs });
+    }
+
+  }
+
+  toggleDisplayNoNewPerson = (state) => {
+    displayNoNewPersonTimeout = setTimeout(() => {
+      this.setState({ backgroundHeld: false });
+      this.setState({ POIHeld: null });
+      this.setState({ displaySettings: false });
+    }, 300);
+  }
+
   equalizerButtonClickedHandler = (event) => {
     if (toggleEqualizerButton) {
       var el = document.getElementById("root");
@@ -285,6 +324,7 @@ class App extends Component {
       POIs[POIHeldIndex].id = selectedPOI.id;
       POIs[POIHeldIndex].soundStatus = selectedPOI.state;
       this.setState({ POIHeld: null });
+      this.setState({ selectedPOI: POIHeldIndex });
     }
     //If new POI is being added
     else {
@@ -303,10 +343,11 @@ class App extends Component {
       selectedPOI.position = [];
       selectedPOI.position[0] = posX;
       selectedPOI.position[1] = posY;
-      selectedPOI.volumeMultiplier = (1).toFixed(2);
+      selectedPOI.volumeMultiplier = (2.25).toFixed(2);
       selectedPOI.volumeNormalizer = 0;
+      selectedPOI.soundStatus = "normal"
       selectedPOI.mute = true;
-      selectedPOI.name = "name"
+      selectedPOI.name = ""
 
 
       POIs.push(selectedPOI);
@@ -532,16 +573,28 @@ class App extends Component {
     });
   }
 
-  httpPostPreparePOIs = (POIs) => {
+  httpPostPreparePOIs = (POIs, masterVolume) => {
     let postPOIs = POIs.map(POI => {
-      return (
-        {
-          id: POI.id,
-          mute: POI.mute,
-          volume: POI.volumeMultiplier * this.state.masterVolume
-        }
-      )
+      if (masterVolume === undefined) {
+        return (
+          {
+            id: POI.id,
+            mute: POI.mute,
+            volume: (POI.volumeMultiplier * this.state.masterVolume) / 3
+          }
+        )
+      }
+      else {
+        return (
+          {
+            id: POI.id,
+            mute: POI.mute,
+            volume: (POI.volumeMultiplier * masterVolume) / 3
+          }
+        )
+      }
     });
+
 
     return postPOIs;
   }
@@ -555,7 +608,7 @@ class App extends Component {
       // transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
     }
 
-    if (ONJETSON) {
+    if (ON_JETSON) {
       appStyle = {
         width: APP_WIDTH + "px",
         height: APP_HEIGHT + "px",
@@ -567,7 +620,14 @@ class App extends Component {
 
     var addPerson = null;
     var settings = null;
+    var videoFeed = null;
 
+    if(this.state.showSceneStatus){
+      videoFeed =
+        <VideoFeed>
+
+        </VideoFeed>
+    }
     if (this.state.displaySettings) {
       settings =
         <Settings
@@ -578,6 +638,9 @@ class App extends Component {
           sources={this.state.sources}
           sourceClickedHandler={this.sourceClickedHandler}
           videoState={this.state.videoState}
+          clickedShowSceneStatus={this.clickedShowSceneStatusHandler}
+          showSceneStatus={this.state.showSceneStatus}
+          noNewPerson={this.toggleDisplayNoNewPerson}
         />
     }
 
@@ -595,7 +658,7 @@ class App extends Component {
           row={2}
           state={this.state}
           newPOIClickedHander={this.newPOIClickedHander}
-        //A list of new people needs to be passed in
+          noNewPerson={this.toggleDisplayNoNewPerson}
         />
     }
     else if (this.state.POIHeld !== null) {
@@ -615,7 +678,7 @@ class App extends Component {
           row={row}
           state={this.state}
           newPOIClickedHander={this.newPOIClickedHander}
-        //A list of new people needs to be passed in
+          noNewPerson={this.toggleDisplayNoNewPerson}
         />
     }
 
@@ -654,6 +717,8 @@ class App extends Component {
           onPOIMouseUp={this.POIMouseUpHandler}
           shouldRefresh={!(this.state.backgroundHeld || this.state.POIHeld !== null)}
           POIHeld={this.state.POIHeld}
+          setSoundStatus={this.setSoundStatus}
+          noNewPerson={this.toggleDisplayNoNewPerson}
         />
         {addPerson}
         {settings}

@@ -6,7 +6,7 @@ class NewPerson extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            newPOIs: this.props.state.newPOIs
+            newPOIs: this.props.state.newPOIs,
         }
     }
 
@@ -44,8 +44,9 @@ class NewPerson extends Component {
     }
 
     render() {
-        if (this.state.newPOIs === null || this.state.newPOIs === undefined) {
-            return null;
+        if (this.state.newPOIs === null || this.state.newPOIs === undefined || this.state.newPOIs.length === 0) {
+            //this.props.noNewPerson();
+            return (null);
         }
 
         let posY = this.props.spacingY * (this.props.row - 1) + this.props.widthHeight * (this.props.row - 1) + this.props.offsetTop;
@@ -69,7 +70,7 @@ class NewPerson extends Component {
 
             for (let i = 0; i < this.props.state.POIs.length; i++) {
                 if (this.props.state.POIs[i].id === POI.id) {
-                    return null;
+                    return (null);
 
                 }
             }

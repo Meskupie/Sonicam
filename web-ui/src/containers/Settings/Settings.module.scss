@@ -6,9 +6,9 @@
     box-shadow: $large-shadow;
     border-radius: 20px;
     display: flex;
-    align-items: center;
     justify-content: center;
     z-index: 2;
+    flex-direction: column;
 }
 
 .Source{
@@ -17,20 +17,21 @@
     display: flex;
 }
 
-.SourceTitle{
+.Title{
     font-size: 25px;
     text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.16) !important;
 }
 
-.SourceBreak{
+.SettingsBreak{
     margin: 0px;
     border: none;
     background-color: $background-color;
     border-radius: 2px;
-    height: 2px;
+    width: 2px;
+    height: 100%;
 }
 
-.PlayingSpinner, .LoadingSpinner, .SpinnerBackground, .Play{
+.PlayingSpinner, .LoadingSpinner, .SpinnerBackground, .Play, .ShowSceneStatusClass{
     position: absolute;
     transition: opacity 0.1s ease-in-out;
 }

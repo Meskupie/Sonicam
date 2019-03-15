@@ -12,7 +12,7 @@
 
 .TextStatusContainer {
     position: absolute;
-    bottom: -8px;
+    bottom: -10px;
     display: flex;
     align-items: center;
     justify-content: center;

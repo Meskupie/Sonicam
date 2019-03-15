@@ -13,6 +13,7 @@ class People extends PureComponent {
         let selectedIndicator;
         let isSelected = null;
         let borderWidth = (this.props.widthHeight - this.props.imageWidthHeight - (this.props.volumeWidth * 2)) / 2 - 2;
+        let PeopleContainerClass = [classes.PeopleContainer];
 
         let personsContainerStyle = {
             top: this.props.offsetTop,
@@ -71,13 +72,14 @@ class People extends PureComponent {
             //     return null;
             // }
 
-            let soundState = null;
+            let soundStatus = null;
 
             if (parsedPOI != null) {
-                soundState = parsedPOI.state;
+                soundStatus = parsedPOI.state;
+                this.props.setSoundStatus(soundStatus, POI.id);
             }
             if (POI.id === -1){
-                soundState = POI.state;
+                soundStatus = POI.soundStatus;
             }
 
             return (
@@ -90,7 +92,7 @@ class People extends PureComponent {
                         imgWidthHeight={this.props.imageWidthHeight}
                         volumeWidth={this.props.volumeWidth}
                         multiplierVolume={multiplierVolume}
-                        soundState={soundState}
+                        soundStatus={soundStatus}
                         onClick={(event) => this.props.onPOIClick(event, POI.id)}
                         onPointerUp={(event) => this.props.onPOIMouseUp(event)}
                         onPointerOut={(event) => this.props.onPOIMouseOut(event)}
@@ -111,7 +113,7 @@ class People extends PureComponent {
         });
 
         return (
-            <div className={classes.PeopleContainer} style={personsContainerStyle} onPointerDown={this.props.onBackgroundMouseDown} onPointerUp={this.props.onBackgroundMouseUp}>
+            <div className={PeopleContainerClass.join(' ')} style={personsContainerStyle} onPointerDown={this.props.onBackgroundMouseDown} onPointerUp={this.props.onBackgroundMouseUp}>
                 {persons}
             </div>
         );

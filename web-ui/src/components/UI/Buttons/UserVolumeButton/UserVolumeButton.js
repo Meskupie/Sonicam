@@ -65,7 +65,7 @@ class UserVolumeButton extends Component {
 
                     </div>
                     <div className={classes.TextBackground} style={textStyle}>
-                        {this.props.volume}
+                        {(this.props.volume/3).toFixed(2)}
                     </div>
                     <div className={classes.Plus} style={minusPlusStyle}>
                         <svg width="102px" height="101px" viewBox="0 0 102 101" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
