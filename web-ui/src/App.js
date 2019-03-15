@@ -146,7 +146,7 @@ class App extends Component {
     });
     getPOIFeed((err, feeds) => {
       let parsedPOIs = JSON.parse(feeds);
-      this.setState({ parsedPOIs });
+      this.setState({ parsedPOIs: parsedPOIs });
     });
     getVideoFeed((err, videoFeed) => {
       this.setState({ videoFeed: videoFeed });
