@@ -10,7 +10,7 @@ import Aux from '../../../../hoc/Aux/Aux';
 class Volume extends Component {
 
     shouldComponentUpdate(nextProps, nextState) {
-        if(this.props.volume === nextProps.volume && this.props.status === nextProps.status){
+        if(this.props.volume === nextProps.volume && this.props.status === nextProps.status && this.props.isMuted === nextProps.isMuted){
             return false;
         }
         return true;

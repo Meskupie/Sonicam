@@ -4,7 +4,7 @@ import People from './containers/People/People';
 import Layout from './containers/Layout/Layout';
 import Settings from './containers/Settings/Settings';
 import NewPerson from './containers/NewPerson/NewPerson';
-import { getPOIFeed, getVideoFeedState, getVideoFeed } from './Functions/GetVideoFeed/GetVideoFeed';
+import { getPOIFeed, getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeed';
 //import { getVideoFeedState } from './Functions/GetVideoFeed/GetVideoFeedState';
 
 const APP_WIDTH = 800;
@@ -25,6 +25,7 @@ const SPACING_X = (APP_WIDTH - SPACING_UI * 2 - WIDTH_HEIGHT * 4) / 3;
 var ONJETSON = false;
 var holdPOIOrBackground;
 var holdUserVolumeButton;
+var toggleEqualizerButton = true;
 // var sendPOSTVolume = true;
 const initialState = {
   selectedPOI: -1,
@@ -138,7 +139,7 @@ class App extends Component {
         this.setState({ parsedPOIs });
       }
     });
-    if(window.screen.width < 900){
+    if (window.screen.width < 900) {
       ONJETSON = true;
     }
   }
@@ -245,6 +246,21 @@ class App extends Component {
     this.httpPost(selected, '/api/files/')
     this.setState({ selectedSource: selected });
     this.setState({ displaySettings: true });
+    this.httpPostPOIsAndGet(this.state.POIs);
+  }
+
+  equalizerButtonClickedHandler = (event) => {
+    if (toggleEqualizerButton) {
+      var el = document.getElementById("root");
+      el.requestFullscreen();
+    }
+    else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+
+    toggleEqualizerButton = !toggleEqualizerButton;
   }
 
   newPOIClickedHander = (event, selectedPOI) => {
@@ -367,6 +383,8 @@ class App extends Component {
 
     const POIs = [...this.state.POIs];
     POIs[personIndex] = POI;
+
+    this.httpPostPOIsAndGet(POIs);
 
     this.setState({ POIs: POIs });
   }
@@ -531,7 +549,6 @@ class App extends Component {
   }
 
   render() {
-
     var appStyle = {
       width: APP_WIDTH + "px",
       height: APP_HEIGHT + "px",
@@ -541,7 +558,7 @@ class App extends Component {
     }
 
     if (ONJETSON) {
-      var appStyle = {
+      appStyle = {
         width: APP_WIDTH + "px",
         height: APP_HEIGHT + "px",
         //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
@@ -619,6 +636,7 @@ class App extends Component {
           userVolumeMouseDownHandler={this.userVolumeMouseDownHandler}
           userVolumeMouseUpOrOutHandler={this.userVolumeMouseUpOrOutHandler}
           settingsButtonClickedHandler={this.settingsButtonClickedHandler}
+          equalizerButtonClickedHandler={this.equalizerButtonClickedHandler}
         />
         <People
           height={APP_HEIGHT - BUTTON_HEIGHT - (SPACING_UI * 2)}

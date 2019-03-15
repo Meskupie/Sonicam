@@ -38,7 +38,9 @@ class Layout extends PureComponent {
                     clickedPlus={(event) => this.props.userVolumeMouseDownHandler(event, 'up')}
                     clickedMinus={(event) => this.props.userVolumeMouseDownHandler(event, 'down')}
                     onPointerUpOrOut={(event) => this.props.userVolumeMouseUpOrOutHandler(event)}/>
-                <EqualizerButton params={buttonParameters}/>
+                <EqualizerButton 
+                    params={buttonParameters}
+                    clicked={(event) => this.props.equalizerButtonClickedHandler(event)}/>
                 <MasterVolumeButton 
                     params={buttonParameters}
                     changed={(event) => this.props.masterVolumeChangeHandler(event)}

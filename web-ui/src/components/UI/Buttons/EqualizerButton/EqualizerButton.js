@@ -17,7 +17,7 @@ class EqualizerButton extends Component {
         };
 
         return (
-            <div className={equalizerClass.join(' ')} style={equalizerButtonStyle}>
+            <div id={"equali"} className={equalizerClass.join(' ')} style={equalizerButtonStyle} onPointerDown={this.props.clicked}>
                 <svg className={classes.Icon} width={this.props.params.buttonSmallWidth * 65 / 80 * 9 / 10 + "px"} height={this.props.params.buttonHeight * 55 / 80 * 9 / 10 + "px"} viewBox="0 0 144 122" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
                     <defs>
                         <linearGradient x1="50%" y1="100%" x2="50%" y2="-161.10244%" id="linearGradient-1">
