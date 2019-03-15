@@ -112,6 +112,9 @@ class Settings extends PureComponent {
 
         return (
             <div style={settingsStyle} className={classes.Settings} >
+                <div className={classes.SettingsConatiner}>
+
+                </div>
                 <div className={classes.SourceContainer}>
                     <div className={[classes.SourceTitle, classes.TextBackground].join(' ')}>
                         Video Source

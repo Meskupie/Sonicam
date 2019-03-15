@@ -10,7 +10,7 @@ import { getPOIFeed, getVideoFeedState } from './Functions/GetVideoFeed/GetVideo
 const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
 //pixels with stetching instead of 480
-const APP_HEIGHT = 451;
+var APP_HEIGHT = 451;
 // const ROWS = 2;
 // const COLUMNS = 4;
 const WIDTH_HEIGHT = 150;
@@ -36,6 +36,7 @@ const initialState = {
   POIClicked: false,
   POIHeld: null,
   displaySettings: false,
+  selectedSource: null,
   parsedPOIs: undefined,
   videoState: "null",
   POIs: [
@@ -131,6 +132,7 @@ class App extends Component {
       this.setState({ videoState: videoState });
       if (this.state.videoState === "eof") {
         this.reset();
+        this.setState({displaySettings: true});
       }
     });
     getPOIFeed((err, feeds) => {
@@ -242,11 +244,11 @@ class App extends Component {
 
   sourceClickedHandler = (selected) => {
     console.log("source clicked");
-    this.setState(initialState);
-    this.httpPost(selected, '/api/files/')
+    this.reset();
+    this.httpPost(selected, '/api/files/');
+    this.httpPostPOIsAndGet(this.state.POIs);
     this.setState({ selectedSource: selected });
     this.setState({ displaySettings: true });
-    this.httpPostPOIsAndGet(this.state.POIs);
   }
 
   equalizerButtonClickedHandler = (event) => {
@@ -321,20 +323,16 @@ class App extends Component {
   POIMouseDownHandler = (event, selectedId) => {
     event.stopPropagation();
     this.setState({ selectedPOI: selectedId });
+    const POIs = [...this.state.POIs];
 
     //delete POI handler
     if (this.state.POIHeld === selectedId) {
-      const POIs = [...this.state.POIs];
 
       POIs.sort(function (a, b) {
         return a.position[0] * Math.pow(a.position[1], 3) - b.position[0] * Math.pow(b.position[1], 3)
       });
 
       const personIndex = POIs.findIndex(x => x.id === selectedId);
-
-      // const POI = {
-      //   ...POIs[personIndex]
-      // }
 
       POIs.splice(personIndex, 1)
 
@@ -360,7 +358,7 @@ class App extends Component {
     this.setState({ displaySettings: false });
     clearTimeout(holdPOIOrBackground);
 
-    this.httpPost(this.httpPostPreparePOIs(this.state.POIs), '/api/pois/');
+    this.httpPost(this.httpPostPreparePOIs(POIs), '/api/pois/');
 
     holdPOIOrBackground = setTimeout(() => { this.POIHeldHandler(selectedId) }, 400);
   }
