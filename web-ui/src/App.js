@@ -11,7 +11,7 @@ import { getPOIFeed, getVideoFeedState, getVideoFeed } from './Functions/GetVide
 const APP_WIDTH = 800;
 //Display issues (non 1:1 pixel aspect ratio) causes the app height 451 
 //pixels with stetching instead of 480
-var APP_HEIGHT = 451
+var APP_HEIGHT = 451;
 var APP_HEIGHT_STYLE = APP_HEIGHT;
 // const ROWS = 2;
 // const COLUMNS = 4;
@@ -624,7 +624,7 @@ class App extends Component {
         height: APP_HEIGHT_STYLE + "px",
         //A non 1:1 pixel aspect ratio in display squishes image. Scale is used to counteract,
         //and transform moves the UI to the corners of window after scaling
-        transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(-8px, 7px)"
+        transform: "scale(1, " + parseFloat(854 / APP_WIDTH) + ") translate(0px, 15px)"
       }
     }
 
