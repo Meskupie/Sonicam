@@ -40,7 +40,7 @@ from parameters import *
 from imaging import FrameServer
 from measurement import FaceDetector, Tracker
 from poi import POIManager
-from audio import Beamformer
+# from audio import Beamformer
 
 # =============
 # Set up a dictionary of queues to be used in message excange between processes
@@ -49,7 +49,7 @@ queue_dict = {}
 queue_dict['master'] = mp.Queue()
 queue_dict['frame_server'] = mp.Queue()
 queue_dict['face_detector'] = mp.Queue()
-queue_dict['beamformer'] = mp.Queue()
+# queue_dict['beamformer'] = mp.Queue()
 
 # =============
 # Create all of the shared memory structures to pass data between processes
@@ -75,12 +75,13 @@ shared_pyramid_frames = [(raw_pyramid_arrays[i],np.frombuffer(raw_pyramid_arrays
 processes = []
 processes.append(FrameServer('FrameServer',queue_dict,shared_buffer_frames,shared_buffer_times,shared_buffer_index,shared_pyramid_frames))
 processes.append(FaceDetector('FaceDetector',queue_dict,shared_buffer_frames,shared_pyramid_frames))
-processes.append(Beamformer('Beamformer',queue_dict))
+# processes.append(Beamformer('Beamformer',queue_dict))
 
 # =============
 # Ready Control
 # =============
-ready_names = [] #AUDIO (remove defaut)
+if param_ignore_audio: ready_names = ['audio']
+else: ready_names = []
 ready_names_required = ['face','audio']
 def updateReady(name=None):
     if name != None:
@@ -94,7 +95,8 @@ def updateReady(name=None):
 # =============
 # Loading Control
 # =============
-loaded_names = [] #AUDIO (remove defaut)
+if param_ignore_audio: loaded_names = ['audio']
+else: loaded_names = []
 loaded_names_required = ['camera','audio']
 def updateLoaded(name=None):
     if name != None:
@@ -109,7 +111,8 @@ def updateLoaded(name=None):
     return True
 def resetLoaded():
     global loaded_names
-    loaded_names = [] #AUDIO (remove defaut)
+    if param_ignore_audio: loaded_names = ['audio']
+    else: loaded_names = []
 
 # =============
 # Stream Control
@@ -122,16 +125,22 @@ def ended_stream():
 def stop_stream():
     tracker.reset()
     poi_manager.reset()
-    requests.post(param_audio_url+"/state", json={'state':'stop'})
+    if not param_ignore_audio:
+        try:
+            requests.post(param_audio_url+"/state", json={'state':'stop'})
+        except:
+            logging.info('connection error to audio')
     queue_dict['frame_server'].put({'type':'stop'})
 
 def load_stream(file):
     resetLoaded()
-    requests.post(param_audio_url+"/fname", json={'fname':file})
+    if not param_ignore_audio:
+        requests.post(param_audio_url+"/fname", json={'fname':file})
     queue_dict['frame_server'].put({'type':'load','src':param_src_video_path+file+param_src_video_suffix})
 
 def start_stream():
-    requests.post(param_audio_url+"/state", json={'state':'start'})
+    if not param_ignore_audio:
+        requests.post(param_audio_url+"/state", json={'state':'start'})
     queue_dict['frame_server'].put({'type':'start'})
 
 # =============
@@ -142,7 +151,10 @@ poi_manager = POIManager()
 add_chin = False
 
 def emitBeamformer():
-    requests.post(param_audio_url+"/data",json=POIManager.getBeamformer())
+    if not param_ignore_audio:
+        requests.post(param_audio_url+"/data",json=poi_manager.getBeamformer())
+    else:
+        pass
     
 def emitFullFrame(frame_raw,tracks):
     frame = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
@@ -206,12 +218,14 @@ def spinServiceJobs(flag,job_queue):
                             emitFeeds(poi_manager.getFeeds())
                             if add_chin:
                                 emitFullFrame(shared_buffer_frames[job['buffer_index']][1],tracker.track_filters)
+
+                        emitBeamformer()
                     
                 elif job['type'] == 'face_results':
                     # Record the frame rate
                     time_now = time.time()
                     if time_last != 0:
-                        logging.info('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(job['results'])))
+                        # logging.info('Detection Frequency: '+str(round(1/(time_now-time_last),2))+' Hz. Found: '+str(len(job['results'])))
                         assert job['buffer_index'] != None
                     else:
                         logging.info('Detection Frequency: First Frame')
@@ -349,18 +363,16 @@ def uisettings_url():
         return json.dumps({'success':False}), 500, {'ContentType':'application/json'}
 
 def force_start_file():
-    # Force start file
-    if param_src_force:
-        logging.info('Loading file in headless mode')
-        while not updateReady():
-            logging.info('Waiting for ready')
-            e.sleep(0.1)
-        logging.info('Ready')
-        load_stream(param_src_files[param_src_file_i])
-        while not updateLoaded():
-            logging.info('Waiting for loaded')
-            e.sleep(0.1)
-        logging.info('Playing')
+    logging.info('Loading file in headless mode')
+    while not updateReady():
+        logging.debug('Waiting for ready')
+        e.sleep(0.1)
+    logging.debug('Ready')
+    load_stream(param_src_files[param_src_file_i])
+    while not updateLoaded():
+        logging.debug('Waiting for loaded')
+        e.sleep(0.1)
+    logging.debug('Playing')
 
 if __name__ == '__main__':
     running_flag = mp.Value(ctypes.c_ubyte)
@@ -369,7 +381,10 @@ if __name__ == '__main__':
     threads = []
     threads.append(e.spawn(spinServiceJobs,running_flag,queue_dict['master']))
     threads.append(e.spawn(waitForInput,running_flag,threads))
-    threads.append(e.spawn(force_start_file))
+    
+    # Force start file
+    if param_src_force:
+        e.spawn(force_start_file)
 
     # Start webserver    
     try:

@@ -306,7 +306,8 @@ class ImageReadWorker(mp.Process):
                 time.sleep(max(0,(1/hz)-(time.time()-start)))
         if self.cap.isOpened():
             self.cap.release()
-        self.parent_queue.put({'type':'eof'})
+        else:
+            self.parent_queue.put({'type':'eof'})
                 
     def killSelf(self):
         if self.cap.isOpened():
