@@ -145,9 +145,11 @@ def load_stream(file):
     queue_dict['frame_server'].put({'type':'load','src':src})
 
 def start_stream():
+    queue_dict['frame_server'].put({'type':'start'})
+    e.sleep(param_audio_delay)
     if not param_ignore_audio:
         requests.post(param_audio_url+"/state", json={'state':'start'})
-    queue_dict['frame_server'].put({'type':'start'})
+    
 
 # =============
 # Main application
@@ -161,7 +163,7 @@ def emitBeamformer():
         requests.post(param_audio_url+"/data",json=poi_manager.getBeamformer())
     else:
         pass
-        #logging.info(['angle: '+str(n['angle']) for n in poi_manager.getBeamformer()])
+        logging.info(['angle: '+str(n['angle']) for n in poi_manager.getBeamformer()])
     
 def emitFullFrame(frame_raw,tracks):
     frame = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)
