@@ -22,19 +22,17 @@ param_image_buffer_end = 2
 param_frame_period = 1.0/param_cam_fps
 
 param_flip_video = False
-param_src_force = False
-param_src_file_i = 0
+param_src_force = True
+param_src_file_i = 1
 param_src_video_path = '../data/'
 param_src_video_suffix = '.mp4'
-param_src_files = ['recording_eric','sample_video_very_easy','sample_video_easy']
-param_src_cam = "nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)" + str(param_frame_shape[1]) + ", height=(int)" + \
-        str(param_frame_shape[0]) + ", format=(string)I420, framerate=(fraction)" + str(param_cam_fps) + \
-        "/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+param_src_files = ['Camera','Team_Discussion','Two_People_Speaking','One_Person_Speaking']
+param_src_cam = '/dev/video0'#"nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)"+str(param_frame_shape[1])+", height=(int)"+str(param_frame_shape[0])+", format=(string)I420, framerate=(fraction)"+str(param_cam_fps)+"/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
         
 # FaceDetector
-param_detector_thresholds = [0.7, 0.7, 0.8]
+param_detector_thresholds = [0.7, 0.8, 0.8]
 
-param_scale_choice = 1
+param_scale_choice = 2
 if param_scale_choice == 0:
     param_pyramid_scalings     = [ 2, 3, 5, 8,15,25]
     param_pyramid_scaling_srcs = [-1,-1,-1, 0, 2, 2]
@@ -57,7 +55,7 @@ else:
     param_tf_mtcnn_config = tf.ConfigProto(log_device_placement=False)
     
 # Beamformer
-param_ignore_audio = False
+param_ignore_audio = True
 param_audio_url = 'http://localhost:7000'
 param_fs = 44100
 param_blocksize = param_fs // 100
@@ -67,10 +65,10 @@ param_output_ch = 2
 
 # Tracker
 param_target_search_treshold = 1
-param_motion_stddev = [0.5,0.01,0.5,0.01,0.5,0.01]
+param_motion_stddev = [0.2,0.05,0.2,0.05,0.2,0.05] #x,dx,y,dy,d,dd
 param_measure_stddev = [20,20,10]
 param_motion_start_k = 1
-param_max_uncertainty = 20
+param_max_uncertainty = 3
 param_dist_func = 'norm' #'norm'={euclidian distance},
 
 param_face_diameter = 0.16 # Meters (~6 inch)
@@ -83,10 +81,10 @@ param_fov_l_y = (param_frame_shape[0]/(2*math.tan(param_aov_y/2)))
 param_fov_l = (param_fov_l_x+param_fov_l_y)/2.0
 
 # Webserver
-param_output_every = 4
+param_output_every = 3
 
-param_output_style = 'feeds'
-param_full_output_shape = (int(round(1920/4.0)),int(round(1080/4.0)))
+param_output_style = 'full'
+param_full_output_shape = (768,432)#(int(round(1920/4.0)),int(round(1080/4.0)))
 param_flask_queue_spin_rate = 1000
 
 param_headfeed_count = 10

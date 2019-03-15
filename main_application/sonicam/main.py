@@ -138,7 +138,11 @@ def load_stream(file):
     resetLoaded()
     if not param_ignore_audio:
         requests.post(param_audio_url+"/fname", json={'fname':file})
-    queue_dict['frame_server'].put({'type':'load','src':param_src_video_path+file+param_src_video_suffix})
+    if file == 'Camera':
+        src = param_src_cam
+    else:
+        src = param_src_video_path+file+param_src_video_suffix
+    queue_dict['frame_server'].put({'type':'load','src':src})
 
 def start_stream():
     if not param_ignore_audio:
@@ -157,6 +161,7 @@ def emitBeamformer():
         requests.post(param_audio_url+"/data",json=poi_manager.getBeamformer())
     else:
         pass
+        #logging.info(['angle: '+str(n['angle']) for n in poi_manager.getBeamformer()])
     
 def emitFullFrame(frame_raw,tracks):
     frame = cv2.resize(frame_raw,param_full_output_shape,interpolation = cv2.INTER_NEAREST)#interpolation = cv2.INTER_AREA)

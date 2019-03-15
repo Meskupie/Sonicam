@@ -282,7 +282,12 @@ class ImageReadWorker(mp.Process):
         return buffer_index
     
     def spinFrameCapture(self):
+        logging.info(self.src)
         self.cap = cv2.VideoCapture(self.src)
+        if self.src == param_src_cam:
+            #self.cap.set(cv2.CAP_PROP_FOURCC,cv2.FOURCC('M','J','P','G'))
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         hz = self.cap.get(cv2.CAP_PROP_FPS)
         logging.debug('Frame rate check: '+str(hz))
 

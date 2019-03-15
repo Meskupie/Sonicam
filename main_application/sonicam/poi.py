@@ -144,21 +144,24 @@ class POIManager():
         ny = np.zeros(2,dtype=int)
         ny[0] = int(round(param_headfeed_shape[1]*((max(c[1],0)-c[1])/(c[3]-c[1]))))
         ny[1] = int(param_headfeed_shape[0]-round(param_headfeed_shape[1]*((c[3]-min(c[3],1080))/(c[3]-c[1]))))
-        output_shape = (nx[1]-nx[0],ny[1]-ny[0])
-        input_shape = frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:].shape
-        
-        # Just sanity checking that I am leaving in
-        if output_shape[0] == 0 or output_shape[1] == 0:
-            logging.warning('Skipping headfeed with output shape: '+str(output_shape))
-            return np.zeros(0)
-        if input_shape[0] == 0 or input_shape[1] == 0 or input_shape[2] == 0:
-            logging.warning('Skipping headfeed with input shape: '+str(input_shape))
-            return np.zeros(0)
         
         # Apply backgound color
         out = np.array([[param_headfeed_background]],dtype=np.uint8)
         out = np.repeat(out,param_headfeed_shape[0],axis=0)
         out = np.repeat(out,param_headfeed_shape[0],axis=1)
+        
+        temp = out[ny[0]:ny[1],nx[0]:nx[1],:].shape
+        output_shape = (temp[1],temp[0])#(nx[1]-nx[0],ny[1]-ny[0])
+        input_shape = frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:].shape
+        
+        # Just sanity checking that I am leaving in
+        if output_shape[0] < 10 or output_shape[1] < 10:
+            logging.warning('Skipping headfeed with output shape: '+str(output_shape))
+            return np.zeros(0)
+        if input_shape[0] < 10 or input_shape[1] < 10 or input_shape[2] < 3:
+            logging.warning('Skipping headfeed with input shape: '+str(input_shape))
+            return np.zeros(0)
+       
         # Add headfeed to array
         out[ny[0]:ny[1],nx[0]:nx[1],:] = cv2.resize(frame_raw[int(max(c[1],0)):int(min(c[3],1080)),int(max(c[0],0)):int(min(c[2],1920)),:],output_shape,interpolation = cv2.INTER_AREA)
         return out
