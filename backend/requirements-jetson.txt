@@ -7,7 +7,7 @@ chardet==3.0.4
 Click==7.0
 cycler==0.10.0
 dnspython==1.16.0
-eventlet==0.24.1
+eventlet==0.31.0
 Flask==1.0.2
 Flask-SocketIO==3.2.1
 gast==0.2.2
